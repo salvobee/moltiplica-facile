@@ -38,49 +38,19 @@ Preferred communication style: Simple, everyday language.
 - `/random` - Random exercises by difficulty
 - `/stats` - User statistics and progress tracking
 
-### Backend Architecture
+### Client-side Firebase Integration
 
-**Server Framework:**
-- Express.js with TypeScript
-- HTTP server for API endpoints
-- Development mode with Vite middleware integration
-- Production static file serving
-
-**Storage Strategy:**
-- Memory-based storage implementation (MemStorage) for development
-- Interface-based design (IStorage) allowing easy migration to database
-- Guest mode uses localStorage for offline functionality
-- Cloud sync capability when user authenticates
-
-**Data Models:**
-- Exercise: Tracks individual multiplication problems with score, errors, timestamp
-- UserStats: Aggregates total exercises, scores, and difficulty-level breakdowns
-- LeaderboardEntry: User ranking data for competitive features
+- L'applicazione gira interamente nel browser: nessun server Node/Express necessario.
+- Firebase Authentication gestisce il login con Google ed Apple direttamente lato client.
+- Cloud Firestore viene utilizzato per sincronizzare statistiche, esercizi e leaderboard.
+- In modalità ospite i dati continuano ad essere salvati in `localStorage` e vengono sincronizzati dopo l'accesso.
+- La configurazione di Firebase viene letta da `public/firebase-config.js`, evitando l'uso di variabili `.env`.
 
 ### External Dependencies
 
-**Authentication & Database:**
-- Firebase Authentication for user login (Google and Apple providers)
-- Cloud Firestore for user data persistence and real-time sync
-- Local storage fallback for guest users
-
-**UI Component Library:**
-- Radix UI primitives for accessible components (dialogs, dropdowns, tooltips, etc.)
-- shadcn/ui design system (New York style variant)
-- React Hook Form with Zod validation for forms
-- React Icons for icon library
-
-**Development & Build Tools:**
-- TypeScript for type safety
-- ESBuild for server bundling
-- PostCSS with Tailwind for styling
-- tsx for development server execution
-
-**Database Configuration:**
-- Drizzle ORM configured for PostgreSQL (via @neondatabase/serverless)
-- Schema defined in shared/schema.ts
-- Migration support through drizzle-kit
-- Note: Database is configured but not actively used; migration path available
+- Firebase SDK web per Auth + Firestore.
+- Radix UI, shadcn/ui, React Hook Form, Zod e TanStack Query per l'interfaccia e la gestione dello stato.
+- Tailwind CSS e Vite come tool di build completamente client-side.
 
 **Gamification Features:**
 - Score calculation based on speed, accuracy, and hint usage
