@@ -10,6 +10,10 @@ interface MultiplicationDisplayProps {
 export function MultiplicationDisplay({ state, showPartialProducts = true }: MultiplicationDisplayProps) {
   const { num1Digits, num2Digits, partialProducts, currentPartialProduct } = state;
 
+  const isAdditionPhase = state.phase === 'addition';
+  const isCompletePhase = state.phase === 'complete';
+  const activeAdditionColumn = isAdditionPhase ? state.additionColumnIndex : null;
+
   // Reverse digits for display (we store them reversed for easier calculation)
   const num1Display = [...num1Digits].reverse();
   const num2Display = [...num2Digits].reverse();
@@ -27,16 +31,16 @@ export function MultiplicationDisplay({ state, showPartialProducts = true }: Mul
       })
     : [];
 
-  const hasActiveStep =
-    !state.isComplete && state.currentMultiplierIndex < state.num2Digits.length;
+  const hasActiveMultiplicationStep =
+    state.phase === 'multiplication' && state.currentMultiplierIndex < state.num2Digits.length;
 
   const activeMultiplicandDisplayIndex =
-    hasActiveStep && state.currentMultiplicandIndex < state.num1Digits.length
+    hasActiveMultiplicationStep && state.currentMultiplicandIndex < state.num1Digits.length
       ? num1Display.length - 1 - state.currentMultiplicandIndex
       : null;
 
   const activeMultiplierDisplayIndex =
-    hasActiveStep && state.currentMultiplierIndex < state.num2Digits.length
+    hasActiveMultiplicationStep && state.currentMultiplierIndex < state.num2Digits.length
       ? num2Display.length - 1 - state.currentMultiplierIndex
       : null;
 
@@ -69,11 +73,35 @@ export function MultiplicationDisplay({ state, showPartialProducts = true }: Mul
     });
   }
 
+  const additionColumnCount = state.partialProducts.length
+    ? state.partialProducts.reduce((max, partial, idx) => {
+        const columns = partial.length + idx;
+        return Math.max(max, columns);
+      }, 0)
+    : 0;
+
+  const computedFinalDigits = (() => {
+    if (state.finalResultDigits.length > 0) {
+      return state.finalResultDigits;
+    }
+    if (isCompletePhase) {
+      const productValue = state.num1 * state.num2;
+      return String(productValue)
+        .split('')
+        .map(Number)
+        .reverse();
+    }
+    return [];
+  })();
+
   const totalDigitColumns = Math.max(
     num1Display.length,
     num2Display.length,
     carryIndicators.length,
-    ...partialRows.map((row) => row.digits.length + row.shift)
+    ...partialRows.map((row) => row.digits.length + row.shift),
+    computedFinalDigits.length,
+    additionColumnCount,
+    state.additionColumnIndex + (state.additionCarry > 0 ? 1 : 0)
   );
 
   const totalColumns = totalDigitColumns + 1; // extra column for the × / = symbols
@@ -156,7 +184,7 @@ export function MultiplicationDisplay({ state, showPartialProducts = true }: Mul
                 "bg-primary/15 text-primary rounded-lg border border-primary/60 shadow-sm font-extrabold",
               placeholder: <span />,
             })}
-            <td className="w-9 sm:w-11 md:w-12 text-center text-primary align-bottom">×</td>
+            <td className="w-9 sm:w-11 md:w-12" />
           </tr>
 
           <tr className="text-4xl sm:text-5xl md:text-6xl font-bold text-foreground">
@@ -168,7 +196,7 @@ export function MultiplicationDisplay({ state, showPartialProducts = true }: Mul
                 "bg-primary/15 text-primary rounded-lg border border-primary/60 shadow-sm font-extrabold",
               placeholder: <span />,
             })}
-            <td className="w-9 sm:w-11 md:w-12 text-center text-primary align-bottom">=</td>
+            <td className="w-9 sm:w-11 md:w-12 text-center text-primary align-bottom">×</td>
           </tr>
 
           <tr>
@@ -177,9 +205,45 @@ export function MultiplicationDisplay({ state, showPartialProducts = true }: Mul
             </td>
           </tr>
 
+          {isAdditionPhase && state.additionCarry > 0 && (
+            <tr className="text-base sm:text-lg md:text-xl text-destructive font-semibold">
+              {Array.from({ length: totalDigitColumns }, (_, colIdx) => {
+                const columnFromRight = totalDigitColumns - 1 - colIdx;
+                const isActiveColumn = columnFromRight === state.additionColumnIndex;
+                return (
+                  <td
+                    key={`addition-carry-${colIdx}`}
+                    className="w-9 sm:w-11 md:w-12 h-8 text-center align-top font-mono"
+                  >
+                    {isActiveColumn ? (
+                      <sup className="text-destructive text-lg sm:text-xl md:text-2xl font-bold">
+                        {state.additionCarry}
+                      </sup>
+                    ) : (
+                      <span className="opacity-0">0</span>
+                    )}
+                  </td>
+                );
+              })}
+              <td className="w-9 sm:w-11 md:w-12" />
+            </tr>
+          )}
+
           {showPartialProducts &&
             partialRows.map((row, rowIdx) => {
               const partialDisplay = [...row.digits].reverse();
+              const additionHighlightIndex =
+                activeAdditionColumn !== null
+                  ? (() => {
+                      const digitIndex = activeAdditionColumn - row.shift;
+                      if (digitIndex >= 0 && digitIndex < row.digits.length) {
+                        return partialDisplay.length - 1 - digitIndex;
+                      }
+                      return null;
+                    })()
+                  : null;
+              const shouldShowAdditionSymbol = !row.isPreview && state.partialProducts.length > 1;
+              const symbol = shouldShowAdditionSymbol ? '+' : '';
 
               return (
                 <tr
@@ -197,8 +261,15 @@ export function MultiplicationDisplay({ state, showPartialProducts = true }: Mul
                         ? `partial-preview-digit-${idx}`
                         : `partial-${row.renderIndex}-digit-${idx}`,
                     placeholder: <span />,
+                    activeIndex: additionHighlightIndex ?? undefined,
+                    activeClassName:
+                      additionHighlightIndex !== null
+                        ? "bg-accent/20 text-foreground rounded-lg border border-accent shadow-sm"
+                        : undefined,
                   })}
-                  <td className="w-9 sm:w-11 md:w-12" />
+                  <td className="w-9 sm:w-11 md:w-12 text-center text-primary align-bottom font-semibold">
+                    {symbol}
+                  </td>
                 </tr>
               );
             })}
@@ -208,6 +279,30 @@ export function MultiplicationDisplay({ state, showPartialProducts = true }: Mul
               <td colSpan={totalColumns} className="pt-1">
                 <div className="w-full border-t-2 border-foreground" />
               </td>
+            </tr>
+          )}
+
+          {(isAdditionPhase || isCompletePhase || computedFinalDigits.length > 0) && (
+            <tr className="text-4xl sm:text-5xl md:text-6xl font-bold text-foreground">
+              {createDigitCells(
+                Array.from({ length: totalDigitColumns }, (_, colIdx) => {
+                  const digitIndex = totalDigitColumns - 1 - colIdx;
+                  return computedFinalDigits[digitIndex] ?? null;
+                }),
+                {
+                  getContent: (value) => (value !== null && value !== undefined ? value : <span />),
+                  placeholder: <span />,
+                  activeIndex:
+                    activeAdditionColumn !== null && activeAdditionColumn < totalDigitColumns
+                      ? totalDigitColumns - 1 - activeAdditionColumn
+                      : undefined,
+                  activeClassName:
+                    activeAdditionColumn !== null && activeAdditionColumn < totalDigitColumns
+                      ? "bg-accent/20 text-foreground rounded-lg border border-accent shadow-sm"
+                      : undefined,
+                }
+              )}
+              <td className="w-9 sm:w-11 md:w-12 text-center text-primary align-bottom font-semibold">=</td>
             </tr>
           )}
         </tbody>
