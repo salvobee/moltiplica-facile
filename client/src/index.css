@@ -14,61 +14,64 @@
   --elevate-1: rgba(0,0,0, .03);
   --elevate-2: rgba(0,0,0, .08);
 
-  --background: 35 3% 96%;
+  --background: 35 20% 96%;
 
-  --foreground: 35 15% 15%;
+  --foreground: 210 15% 20%;
 
-  --border: 35 8% 85%;
+  --border: 210 15% 75%;
 
-  --card: 35 4% 94%;
+  --card: 0 0% 100%;
 
-  --card-foreground: 35 15% 15%;
+  --card-foreground: 210 15% 20%;
 
-  --card-border: 35 10% 88%;
+  --card-border: 210 15% 85%;
 
-  --sidebar: 35 4% 92%;
+  --sidebar: 0 0% 100%;
 
-  --sidebar-foreground: 35 15% 15%;
+  --sidebar-foreground: 210 15% 20%;
 
-  --sidebar-border: 35 12% 86%;
+  --sidebar-border: 210 15% 85%;
 
   --sidebar-primary: 210 85% 45%;
 
   --sidebar-primary-foreground: 210 85% 98%;
 
-  --sidebar-accent: 35 8% 88%;
+  --sidebar-accent: 210 10% 92%;
 
-  --sidebar-accent-foreground: 35 15% 20%;
+  --sidebar-accent-foreground: 210 15% 20%;
 
   --sidebar-ring: 210 85% 45%;
 
-  --popover: 35 5% 90%;
+  --popover: 0 0% 100%;
 
-  --popover-foreground: 35 15% 15%;
+  --popover-foreground: 210 15% 20%;
 
-  --popover-border: 35 12% 84%;
+  --popover-border: 210 15% 85%;
 
   --primary: 210 85% 45%;
 
   --primary-foreground: 210 85% 98%;
 
-  --secondary: 35 8% 86%;
+  --secondary: 210 10% 92%;
 
-  --secondary-foreground: 35 15% 20%;
+  --secondary-foreground: 210 15% 20%;
 
-  --muted: 35 10% 88%;
+  --muted: 210 10% 92%;
 
-  --muted-foreground: 35 15% 35%;
+  --muted-foreground: 210 15% 45%;
 
-  --accent: 35 12% 86%;
+  --accent: 45 95% 60%;
 
-  --accent-foreground: 35 15% 20%;
+  --accent-foreground: 45 15% 15%;
 
   --destructive: 0 75% 55%;
 
   --destructive-foreground: 0 75% 98%;
 
-  --input: 35 20% 70%;
+  --success: 145 70% 45%;
+  --success-foreground: 145 70% 98%;
+
+  --input: 210 20% 90%;
   --ring: 210 85% 45%;
   --chart-1: 210 85% 40%;
   --chart-2: 145 70% 40%;
@@ -76,9 +79,9 @@
   --chart-4: 45 95% 50%;
   --chart-5: 0 75% 50%;
 
-  --font-sans: Open Sans, sans-serif;
+  --font-sans: 'Comic Neue', system-ui, sans-serif;
   --font-serif: Georgia, serif;
-  --font-mono: Menlo, monospace;
+  --font-mono: 'Roboto Mono', monospace;
   --radius: .5rem; /* 8px */
   --shadow-2xs: 0px 2px 0px 0px hsl(210 15% 20% / 0.03);
   --shadow-xs: 0px 2px 0px 0px hsl(210 15% 20% / 0.05);
@@ -324,5 +327,64 @@
   .border.active-elevate-2:not(.no-active-interaction-elevate)::after,
   .border.hover-elevate:not(.no-hover-interaction-elevate)::after {
     inset: -1px;
+  }
+
+  /* Notebook grid background */
+  .notebook-grid {
+    background-color: hsl(var(--background));
+    background-image: 
+      linear-gradient(0deg, hsl(210 15% 75%) 1px, transparent 1px),
+      linear-gradient(90deg, hsl(210 15% 75%) 1px, transparent 1px);
+    background-size: 20px 20px;
+  }
+
+  /* Success shake animation */
+  @keyframes success-bounce {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.05); }
+  }
+
+  .success-bounce {
+    animation: success-bounce 0.5s ease-in-out;
+  }
+
+  /* Error shake animation */
+  @keyframes error-shake {
+    0%, 100% { transform: translateX(0); }
+    25% { transform: translateX(-10px); }
+    75% { transform: translateX(10px); }
+  }
+
+  .error-shake {
+    animation: error-shake 0.4s ease-in-out;
+  }
+
+  /* Confetti animation for completion */
+  @keyframes confetti-fall {
+    0% { transform: translateY(-100vh) rotate(0deg); opacity: 1; }
+    100% { transform: translateY(100vh) rotate(720deg); opacity: 0; }
+  }
+
+  .confetti {
+    position: fixed;
+    width: 10px;
+    height: 10px;
+    background-color: var(--accent);
+    animation: confetti-fall 3s linear;
+  }
+
+  /* Pulse animation for hints */
+  @keyframes pulse-hint {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.6; }
+  }
+
+  .pulse-hint {
+    animation: pulse-hint 1.5s ease-in-out infinite;
+  }
+
+  /* Scale down on active */
+  .active\:scale-95:active {
+    transform: scale(0.95);
   }
 }
