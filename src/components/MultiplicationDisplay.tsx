@@ -184,7 +184,7 @@ export function MultiplicationDisplay({ state, showPartialProducts = true }: Mul
                 "bg-primary/15 text-primary rounded-lg border border-primary/60 shadow-sm font-extrabold",
               placeholder: <span />,
             })}
-            <td className="w-9 sm:w-11 md:w-12 text-center text-primary align-bottom">×</td>
+            <td className="w-9 sm:w-11 md:w-12" />
           </tr>
 
           <tr className="text-4xl sm:text-5xl md:text-6xl font-bold text-foreground">
@@ -196,7 +196,7 @@ export function MultiplicationDisplay({ state, showPartialProducts = true }: Mul
                 "bg-primary/15 text-primary rounded-lg border border-primary/60 shadow-sm font-extrabold",
               placeholder: <span />,
             })}
-            <td className="w-9 sm:w-11 md:w-12 text-center text-primary align-bottom">=</td>
+            <td className="w-9 sm:w-11 md:w-12 text-center text-primary align-bottom">×</td>
           </tr>
 
           <tr>
@@ -204,6 +204,30 @@ export function MultiplicationDisplay({ state, showPartialProducts = true }: Mul
               <div className="w-full border-t-2 border-foreground" />
             </td>
           </tr>
+
+          {isAdditionPhase && state.additionCarry > 0 && (
+            <tr className="text-base sm:text-lg md:text-xl text-destructive font-semibold">
+              {Array.from({ length: totalDigitColumns }, (_, colIdx) => {
+                const columnFromRight = totalDigitColumns - 1 - colIdx;
+                const isActiveColumn = columnFromRight === state.additionColumnIndex;
+                return (
+                  <td
+                    key={`addition-carry-${colIdx}`}
+                    className="w-9 sm:w-11 md:w-12 h-8 text-center align-top font-mono"
+                  >
+                    {isActiveColumn ? (
+                      <sup className="text-destructive text-lg sm:text-xl md:text-2xl font-bold">
+                        {state.additionCarry}
+                      </sup>
+                    ) : (
+                      <span className="opacity-0">0</span>
+                    )}
+                  </td>
+                );
+              })}
+              <td className="w-9 sm:w-11 md:w-12" />
+            </tr>
+          )}
 
           {showPartialProducts &&
             partialRows.map((row, rowIdx) => {
@@ -218,9 +242,8 @@ export function MultiplicationDisplay({ state, showPartialProducts = true }: Mul
                       return null;
                     })()
                   : null;
-              const isLastActualRow =
-                !row.isPreview && state.partialProducts.length > 1 && row.renderIndex === state.partialProducts.length - 1;
-              const symbol = isLastActualRow ? '+' : '';
+              const shouldShowAdditionSymbol = !row.isPreview && state.partialProducts.length > 1;
+              const symbol = shouldShowAdditionSymbol ? '+' : '';
 
               return (
                 <tr

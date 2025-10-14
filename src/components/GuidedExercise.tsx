@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, type ReactNode } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { MultiplicationDisplay } from "./MultiplicationDisplay";
@@ -93,17 +93,42 @@ export function GuidedExercise({ num1, num2, difficulty, onComplete, onReset }: 
     }
   };
 
-  const getInstructionText = (): string => {
+  const getInstructionText = (): ReactNode => {
     if (currentStepType === 'sum') {
       const columnLabels = ['unità', 'decine', 'centinaia', 'migliaia'];
       const columnIndex = state.additionColumnIndex;
       const label = columnLabels[columnIndex] ?? `colonna ${columnIndex + 1}`;
-      const carryText = state.additionCarry > 0 ? ` Aggiungi anche il riporto ${state.additionCarry}.` : '';
-      return `Somma in colonna i prodotti parziali nelle ${label}.${carryText}`;
+      return (
+        <>
+          Somma in colonna i prodotti parziali nelle {label}
+          {state.additionCarry > 0 && (
+            <>
+              ,{' '}
+              <span className="text-destructive font-semibold">
+                aggiungendo il riporto di {state.additionCarry}
+              </span>
+            </>
+          )}
+          .
+        </>
+      );
     }
     const multiplier = state.num2Digits[state.currentMultiplierIndex];
     const multiplicand = state.num1Digits[state.currentMultiplicandIndex];
-    return `Moltiplica ${multiplier} × ${multiplicand}${state.currentCarry > 0 ? ` e aggiungi il riporto ${state.currentCarry}` : ''}, scrivendo il risultato completo.`;
+    return (
+      <>
+        Moltiplica {multiplier} × {multiplicand}
+        {state.currentCarry > 0 && (
+          <>
+            ,{' '}
+            <span className="text-destructive font-semibold">
+              aggiungendo il riporto di {state.currentCarry}
+            </span>
+          </>
+        )}
+        , scrivendo il risultato completo.
+      </>
+    );
   };
 
   const instructionText = getInstructionText();
