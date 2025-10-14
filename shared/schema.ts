@@ -80,6 +80,8 @@ export interface StepValidation {
   stepType: StepType;
   hintLevel?: 1 | 2 | 3; // progressive hint levels
   hintMessage?: string;
+  expectedCarry?: number;
+  expectedDigit?: number;
 }
 
 // Firebase user data structure
