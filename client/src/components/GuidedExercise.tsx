@@ -99,7 +99,7 @@ export function GuidedExercise({ num1, num2, difficulty, onComplete, onReset }: 
     }
     const multiplier = state.num2Digits[state.currentMultiplierIndex];
     const multiplicand = state.num1Digits[state.currentMultiplicandIndex];
-    return `Moltiplica ${multiplier} × ${multiplicand}${state.currentCarry > 0 ? ` e aggiungi il riporto ${state.currentCarry}` : ''}`;
+    return `Moltiplica ${multiplier} × ${multiplicand}${state.currentCarry > 0 ? ` e aggiungi il riporto ${state.currentCarry}` : ''}, scrivendo il risultato completo.`;
   };
 
   const instructionText = getInstructionText();
@@ -158,6 +158,7 @@ export function GuidedExercise({ num1, num2, difficulty, onComplete, onReset }: 
               isError={isError}
               size="lg"
               autoFocus
+              placeholder="Risultato completo"
               data-testid="input-current-step"
             />
           </div>

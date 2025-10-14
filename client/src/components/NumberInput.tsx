@@ -4,7 +4,7 @@ import { cn } from "@/lib/utils";
 
 interface NumberInputProps {
   value: number | null;
-  onChange: (value: number) => void;
+  onChange: (value: number | null) => void;
   isCorrect?: boolean;
   isError?: boolean;
   size?: 'sm' | 'md' | 'lg';
@@ -43,14 +43,30 @@ export function NumberInput({
     }
   }, [isCorrect]);
 
+  useEffect(() => {
+    if (value === null || Number.isNaN(value)) {
+      setLocalValue('');
+      return;
+    }
+
+    const nextValue = value.toString();
+    setLocalValue((prev) => (prev === nextValue ? prev : nextValue));
+  }, [value]);
+
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const newValue = e.target.value;
-    
-    // Only allow single digit
-    if (newValue === '' || /^[0-9]$/.test(newValue)) {
+
+    // Only allow numeric characters
+    if (/^\d*$/.test(newValue)) {
       setLocalValue(newValue);
-      if (newValue !== '') {
-        onChange(parseInt(newValue, 10));
+      if (newValue === '') {
+        onChange(null);
+        return;
+      }
+
+      const parsedValue = parseInt(newValue, 10);
+      if (!Number.isNaN(parsedValue)) {
+        onChange(parsedValue);
       }
     }
   };
@@ -65,8 +81,7 @@ export function NumberInput({
     <Input
       type="text"
       inputMode="numeric"
-      pattern="[0-9]"
-      maxLength={1}
+      pattern="[0-9]*"
       value={localValue}
       onChange={handleChange}
       autoFocus={autoFocus}

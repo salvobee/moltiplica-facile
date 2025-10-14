@@ -12,12 +12,36 @@ export function MultiplicationDisplay({ state, showPartialProducts = true }: Mul
   const num1Display = [...num1Digits].reverse();
   const num2Display = [...num2Digits].reverse();
 
+  const showCarryRow =
+    state.currentCarry > 0 && state.currentMultiplicandIndex < state.num1Digits.length;
+
+  const carryIndicators = showCarryRow
+    ? num1Display.map((_, idx) => {
+        const targetIndex = num1Display.length - 1 - state.currentMultiplicandIndex;
+        if (idx === targetIndex) {
+          return state.currentCarry.toString();
+        }
+        return '';
+      })
+    : [];
+
   // Calculate max width needed
   const maxWidth = Math.max(num1Digits.length, num2Digits.length, 
     ...partialProducts.map(p => p.length + partialProducts.indexOf(p)));
 
   return (
     <div className="flex flex-col items-center gap-2 p-6 bg-card border-2 border-card-border rounded-lg">
+      {/* Carry indicators */}
+      {showCarryRow && (
+        <div className="flex justify-end items-end gap-1 font-mono text-lg sm:text-xl md:text-2xl text-primary">
+          {carryIndicators.map((carry, idx) => (
+            <div key={`carry-${idx}`} className="w-12 sm:w-14 md:w-16 text-center min-h-[1.25rem]">
+              {carry ? <sup className="font-semibold">{carry}</sup> : <span className="opacity-0">0</span>}
+            </div>
+          ))}
+        </div>
+      )}
+
       {/* Number 1 - aligned right */}
       <div className="flex justify-end items-center gap-1 font-mono text-4xl sm:text-5xl md:text-6xl font-bold text-foreground">
         {num1Display.map((digit, idx) => (

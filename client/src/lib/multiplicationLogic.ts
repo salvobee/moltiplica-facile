@@ -62,14 +62,28 @@ export function validateStep(
   userValue: number,
   stepType: StepType
 ): StepValidation {
-  const expectedValue = calculateExpectedValue(state, stepType);
-  const isCorrect = userValue === expectedValue;
+  let expectedValue = calculateExpectedValue(state, stepType);
+  let expectedCarry: number | null = null;
+  let expectedDigit: number | null = null;
+  let isCorrect = userValue === expectedValue;
+
+  if (stepType === 'multiply' || stepType === 'partial') {
+    const multiplier = state.num2Digits[state.currentMultiplierIndex];
+    const multiplicand = state.num1Digits[state.currentMultiplicandIndex];
+    const product = multiplier * multiplicand + state.currentCarry;
+    expectedDigit = product % 10;
+    expectedCarry = Math.floor(product / 10);
+    expectedValue = product;
+    isCorrect = userValue === expectedValue || userValue === expectedDigit;
+  }
 
   return {
     isCorrect,
     expectedValue,
     actualValue: userValue,
     stepType,
+    expectedCarry: expectedCarry ?? undefined,
+    expectedDigit: expectedDigit ?? undefined,
   };
 }
 
@@ -91,7 +105,11 @@ export function getHintMessage(
     }
     if (hintLevel === 3) {
       const result = multiplier * multiplicand + currentCarry;
-      return `${multiplier} × ${multiplicand}${currentCarry > 0 ? ` + ${currentCarry}` : ''} = ${result}. Scrivi ${result % 10}`;
+      const carry = Math.floor(result / 10);
+      if (carry > 0) {
+        return `${multiplier} × ${multiplicand}${currentCarry > 0 ? ` + ${currentCarry}` : ''} = ${result}. Scrivi ${result} e porta ${carry} alla colonna successiva.`;
+      }
+      return `${multiplier} × ${multiplicand}${currentCarry > 0 ? ` + ${currentCarry}` : ''} = ${result}. Scrivi ${result}.`;
     }
   }
 
