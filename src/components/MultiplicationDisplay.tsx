@@ -1,3 +1,4 @@
+import type { ReactNode } from "react";
 import { MultiplicationState } from "@shared/schema";
 import { cn } from "@/lib/utils";
 
@@ -68,106 +69,149 @@ export function MultiplicationDisplay({ state, showPartialProducts = true }: Mul
     });
   }
 
+  const totalDigitColumns = Math.max(
+    num1Display.length,
+    num2Display.length,
+    carryIndicators.length,
+    ...partialRows.map((row) => row.digits.length + row.shift)
+  );
+
+  const totalColumns = totalDigitColumns + 1; // extra column for the × / = symbols
+
+  const createDigitCells = <T,>(
+    values: T[],
+    {
+      shift = 0,
+      getContent = (value: T) => value as ReactNode,
+      getTestId,
+      activeIndex,
+      activeClassName,
+      placeholder,
+    }: {
+      shift?: number;
+      getContent?: (value: T, idx: number) => ReactNode;
+      getTestId?: (idx: number) => string | undefined;
+      activeIndex?: number | null;
+      activeClassName?: string;
+      placeholder?: ReactNode;
+    }
+  ) => {
+    const totalLength = values.length + shift;
+    const startIndex = totalDigitColumns - totalLength;
+
+    return Array.from({ length: totalDigitColumns }, (_, colIdx) => {
+      const cellIndex = colIdx - startIndex;
+      const withinDigits = cellIndex >= 0 && cellIndex < values.length;
+      const withinShift = !withinDigits && colIdx >= totalDigitColumns - shift;
+
+      let content: ReactNode = placeholder ?? <span className="opacity-0">0</span>;
+      let className = "";
+      let testId: string | undefined;
+
+      if (withinDigits) {
+        const digitIdx = cellIndex;
+        content = getContent(values[digitIdx], digitIdx);
+        testId = getTestId?.(digitIdx);
+        if (activeIndex === digitIdx && activeClassName) {
+          className = activeClassName;
+        }
+      } else if (withinShift) {
+        content = <span className="text-muted-foreground/50">0</span>;
+      }
+
+      return (
+        <td
+          key={`col-${colIdx}`}
+          className={cn(
+            "w-12 sm:w-14 md:w-16 h-12 sm:h-14 md:h-16 text-center align-bottom font-mono",
+            className
+          )}
+          data-testid={testId}
+        >
+          {content}
+        </td>
+      );
+    });
+  };
+
   return (
     <div className="flex flex-col items-center gap-2 p-6 bg-card border-2 border-card-border rounded-lg">
-      {/* Carry indicators */}
-      {showCarryRow && (
-        <div className="flex justify-end items-end gap-1 font-mono text-lg sm:text-xl md:text-2xl text-primary">
-          {carryIndicators.map((carry, idx) => (
-            <div key={`carry-${idx}`} className="w-12 sm:w-14 md:w-16 text-center min-h-[1.25rem]">
-              {carry ? <sup className="font-semibold">{carry}</sup> : <span className="opacity-0">0</span>}
-            </div>
-          ))}
-        </div>
-      )}
-
-      {/* Number 1 - aligned right */}
-      <div className="flex justify-end items-center gap-1 font-mono text-4xl sm:text-5xl md:text-6xl font-bold text-foreground">
-        {num1Display.map((digit, idx) => {
-          const isActive = activeMultiplicandDisplayIndex === idx;
-          return (
-            <div
-              key={idx}
-              className={cn(
-                "w-12 sm:w-14 md:w-16 text-center transition-all duration-200",
-                isActive &&
-                  "bg-primary/15 text-primary rounded-lg border border-primary/60 shadow-sm font-extrabold"
-              )}
-              data-testid={`num1-digit-${idx}`}
-            >
-              {digit}
-            </div>
-          );
-        })}
-      </div>
-
-      {/* Multiplication sign and Number 2 */}
-      <div className="flex justify-end items-center gap-1 font-mono text-4xl sm:text-5xl md:text-6xl font-bold text-foreground">
-        <span className="w-12 sm:w-14 md:w-16 text-center text-primary">×</span>
-        {num2Display.map((digit, idx) => {
-          const isActive = activeMultiplierDisplayIndex === idx;
-          return (
-            <div
-              key={idx}
-              className={cn(
-                "w-12 sm:w-14 md:w-16 text-center transition-all duration-200",
-                isActive &&
-                  "bg-primary/15 text-primary rounded-lg border border-primary/60 shadow-sm font-extrabold"
-              )}
-              data-testid={`num2-digit-${idx}`}
-            >
-              {digit}
-            </div>
-          );
-        })}
-      </div>
-
-      {/* Separator line */}
-      <div className="w-full border-t-2 border-foreground" />
-
-      {/* Partial products */}
-      {showPartialProducts && partialRows.length > 0 && (
-        <div className="flex flex-col gap-1 w-full">
-          {partialRows.map((row, rowIdx) => {
-            const partialDisplay = [...row.digits].reverse();
-            const leadingZeros = row.shift;
-
-            return (
-              <div
-                key={`${row.isPreview ? 'preview' : 'partial'}-${rowIdx}`}
-                className={cn(
-                  "flex justify-end items-center gap-1 font-mono text-3xl sm:text-4xl md:text-5xl font-medium",
-                  row.isPreview ? "text-primary" : "text-muted-foreground"
-                )}
-              >
-                {partialDisplay.map((digit, digitIdx) => (
-                  <div
-                    key={digitIdx}
-                    className="w-12 sm:w-14 md:w-16 text-center"
-                    data-testid={
-                      row.isPreview
-                        ? `partial-preview-digit-${digitIdx}`
-                        : `partial-${row.renderIndex}-digit-${digitIdx}`
-                    }
-                  >
-                    {digit}
-                  </div>
-                ))}
-                {Array.from({ length: leadingZeros }).map((_, idx) => (
-                  <div key={`zero-${idx}`} className="w-12 sm:w-14 md:w-16 text-center text-muted-foreground/50">
-                    0
-                  </div>
-                ))}
-              </div>
-            );
-          })}
-
-          {/* Final separator if we have multiple partial products */}
-          {state.partialProducts.length > 1 && (
-            <div className="w-full border-t-2 border-foreground mt-2" />
+      <table className="w-full table-fixed border-separate border-spacing-x-1">
+        <tbody>
+          {showCarryRow && (
+            <tr className="text-lg sm:text-xl md:text-2xl text-primary font-semibold">
+              {createDigitCells(carryIndicators, {
+                placeholder: <span className="opacity-0">0</span>,
+              })}
+              <td className="w-12 sm:w-14 md:w-16" />
+            </tr>
           )}
-        </div>
-      )}
+
+          <tr className="text-4xl sm:text-5xl md:text-6xl font-bold text-foreground">
+            {createDigitCells(num1Display, {
+              getContent: (digit) => digit,
+              getTestId: (idx) => `num1-digit-${idx}`,
+              activeIndex: activeMultiplicandDisplayIndex,
+              activeClassName:
+                "bg-primary/15 text-primary rounded-lg border border-primary/60 shadow-sm font-extrabold",
+              placeholder: <span />,
+            })}
+            <td className="w-12 sm:w-14 md:w-16 text-center text-primary align-bottom">×</td>
+          </tr>
+
+          <tr className="text-4xl sm:text-5xl md:text-6xl font-bold text-foreground">
+            {createDigitCells(num2Display, {
+              getContent: (digit) => digit,
+              getTestId: (idx) => `num2-digit-${idx}`,
+              activeIndex: activeMultiplierDisplayIndex,
+              activeClassName:
+                "bg-primary/15 text-primary rounded-lg border border-primary/60 shadow-sm font-extrabold",
+              placeholder: <span />,
+            })}
+            <td className="w-12 sm:w-14 md:w-16 text-center text-primary align-bottom">=</td>
+          </tr>
+
+          <tr>
+            <td colSpan={totalColumns} className="pt-1 pb-2">
+              <div className="w-full border-t-2 border-foreground" />
+            </td>
+          </tr>
+
+          {showPartialProducts &&
+            partialRows.map((row, rowIdx) => {
+              const partialDisplay = [...row.digits].reverse();
+
+              return (
+                <tr
+                  key={`${row.isPreview ? "preview" : "partial"}-${rowIdx}`}
+                  className={cn(
+                    "text-3xl sm:text-4xl md:text-5xl font-medium",
+                    row.isPreview ? "text-primary" : "text-muted-foreground"
+                  )}
+                >
+                  {createDigitCells(partialDisplay, {
+                    shift: row.shift,
+                    getContent: (digit) => digit,
+                    getTestId: (idx) =>
+                      row.isPreview
+                        ? `partial-preview-digit-${idx}`
+                        : `partial-${row.renderIndex}-digit-${idx}`,
+                    placeholder: <span />,
+                  })}
+                  <td className="w-12 sm:w-14 md:w-16" />
+                </tr>
+              );
+            })}
+
+          {showPartialProducts && state.partialProducts.length > 1 && (
+            <tr>
+              <td colSpan={totalColumns} className="pt-1">
+                <div className="w-full border-t-2 border-foreground" />
+              </td>
+            </tr>
+          )}
+        </tbody>
+      </table>
     </div>
   );
 }
