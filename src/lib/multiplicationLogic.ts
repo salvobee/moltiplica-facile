@@ -19,6 +19,41 @@ export function initializeMultiplication(num1: number, num2: number): Multiplica
     hints: 0,
     errors: 0,
     isComplete: false,
+    phase: 'multiplication',
+    additionColumnIndex: 0,
+    additionCarry: 0,
+    finalResultDigits: [],
+  };
+}
+
+function getAdditionColumnCount(state: MultiplicationState): number {
+  if (state.partialProducts.length === 0) return 0;
+
+  return state.partialProducts.reduce((maxColumns, partial, idx) => {
+    const columns = partial.length + idx;
+    return Math.max(maxColumns, columns);
+  }, 0);
+}
+
+function calculateAdditionColumnTotal(state: MultiplicationState) {
+  const columnIndex = state.additionColumnIndex;
+  const sumFromCarry = state.additionCarry;
+
+  const columnSum = state.partialProducts.reduce((total, partial, rowIdx) => {
+    const digitIndex = columnIndex - rowIdx;
+    if (digitIndex >= 0 && digitIndex < partial.length) {
+      return total + partial[digitIndex];
+    }
+    return total;
+  }, sumFromCarry);
+
+  const digit = columnSum % 10;
+  const carry = Math.floor(columnSum / 10);
+
+  return {
+    sum: columnSum,
+    digit,
+    carry,
   };
 }
 
@@ -43,15 +78,8 @@ export function calculateExpectedValue(
   }
 
   if (stepType === 'sum') {
-    // Calculate sum of partial products at current position
-    const position = currentMultiplicandIndex;
-    let sum = 0;
-    state.partialProducts.forEach((partial, index) => {
-      if (partial[position] !== undefined) {
-        sum += partial[position];
-      }
-    });
-    return sum % 10;
+    const { digit } = calculateAdditionColumnTotal(state);
+    return digit;
   }
 
   return 0;
@@ -74,6 +102,14 @@ export function validateStep(
     expectedDigit = product % 10;
     expectedCarry = Math.floor(product / 10);
     expectedValue = product;
+    isCorrect = userValue === expectedValue || userValue === expectedDigit;
+  }
+
+  if (stepType === 'sum') {
+    const { sum, digit, carry } = calculateAdditionColumnTotal(state);
+    expectedDigit = digit;
+    expectedCarry = carry;
+    expectedValue = sum;
     isCorrect = userValue === expectedValue || userValue === expectedDigit;
   }
 
@@ -128,12 +164,63 @@ export function getHintMessage(
     }
   }
 
+  if (stepType === 'sum') {
+    const { sum, digit, carry } = calculateAdditionColumnTotal(state);
+    const columnIndex = state.additionColumnIndex;
+    const positionLabels = ['unità', 'decine', 'centinaia', 'migliaia'];
+    const position = positionLabels[columnIndex] ?? `colonna ${columnIndex + 1}`;
+    const digitsToSum = state.partialProducts
+      .map((partial, idx) => {
+        const digitIndex = columnIndex - idx;
+        if (digitIndex >= 0 && digitIndex < partial.length) {
+          return partial[digitIndex];
+        }
+        return null;
+      })
+      .filter((value): value is number => value !== null);
+    const additions = [
+      ...digitsToSum.map(String),
+      ...(state.additionCarry > 0 ? [String(state.additionCarry)] : []),
+    ];
+
+    if (hintLevel === 1) {
+      return `Osserva bene la colonna delle ${position} e somma tutte le cifre evidenziate.`;
+    }
+    if (hintLevel === 2) {
+      return `Somma le cifre evidenziate${state.additionCarry > 0 ? ` e aggiungi il riporto ${state.additionCarry}` : ''}. Qual è il risultato?`;
+    }
+    if (hintLevel === 3) {
+      const sumExpression = additions.length > 0 ? `${additions.join(' + ')} = ${sum}` : `${sum}`;
+      const carryText = carry > 0 ? `, quindi scrivi ${digit} e porta ${carry}` : `, quindi scrivi ${digit}`;
+      return `${sumExpression}${carryText}.`;
+    }
+  }
+
   return "Riprova con attenzione!";
 }
 
-export function advanceStep(state: MultiplicationState): MultiplicationState {
+export function advanceStep(state: MultiplicationState, stepType: StepType): MultiplicationState {
   const newState = { ...state };
-  
+
+  if (stepType === 'sum') {
+    newState.finalResultDigits = [...newState.finalResultDigits];
+    const { digit, carry } = calculateAdditionColumnTotal(newState);
+    newState.finalResultDigits[newState.additionColumnIndex] = digit;
+    newState.additionColumnIndex += 1;
+    newState.additionCarry = carry;
+
+    const totalColumns = getAdditionColumnCount(newState);
+    const isAdditionFinished =
+      newState.additionColumnIndex >= totalColumns && newState.additionCarry === 0;
+
+    if (isAdditionFinished) {
+      newState.phase = 'complete';
+      newState.isComplete = true;
+    }
+
+    return newState;
+  }
+
   // Calculate the current product value and carry
   const multiplier = newState.num2Digits[newState.currentMultiplierIndex];
   const multiplicand = newState.num1Digits[newState.currentMultiplicandIndex];
@@ -143,7 +230,7 @@ export function advanceStep(state: MultiplicationState): MultiplicationState {
 
   // Add digit to current partial product
   newState.currentPartialProduct.push(digit);
-  
+
   // Move to next multiplicand
   newState.currentMultiplicandIndex++;
   newState.currentCarry = carry;
@@ -154,10 +241,10 @@ export function advanceStep(state: MultiplicationState): MultiplicationState {
     if (newState.currentCarry > 0) {
       newState.currentPartialProduct.push(newState.currentCarry);
     }
-    
+
     // Save the partial product
     newState.partialProducts.push([...newState.currentPartialProduct]);
-    
+
     // Reset for next multiplier
     newState.currentPartialProduct = [];
     newState.currentMultiplicandIndex = 0;
@@ -166,7 +253,14 @@ export function advanceStep(state: MultiplicationState): MultiplicationState {
 
     // Check if we're done with all partial products
     if (newState.currentMultiplierIndex >= newState.num2Digits.length) {
-      newState.isComplete = true;
+      if (newState.num2Digits.length > 1) {
+        newState.phase = 'addition';
+        newState.additionColumnIndex = 0;
+        newState.additionCarry = 0;
+      } else {
+        newState.phase = 'complete';
+        newState.isComplete = true;
+      }
     }
   }
 

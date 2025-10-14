@@ -34,8 +34,8 @@ export function GuidedExercise({ num1, num2, difficulty, onComplete, onReset }: 
 
   // Determine current step type
   const getCurrentStepType = (): StepType => {
-    if (state.currentMultiplierIndex >= state.num2Digits.length) {
-      return 'sum'; // Final sum
+    if (state.phase === 'addition' || state.phase === 'complete') {
+      return 'sum';
     }
     return 'multiply';
   };
@@ -55,7 +55,7 @@ export function GuidedExercise({ num1, num2, difficulty, onComplete, onReset }: 
 
       // Advance to next step after a brief delay
       setTimeout(() => {
-        const newState = advanceStep(state);
+        const newState = advanceStep(state, currentStepType);
         setState(newState);
         setCurrentInput(null);
         setIsCorrect(false);
@@ -95,7 +95,11 @@ export function GuidedExercise({ num1, num2, difficulty, onComplete, onReset }: 
 
   const getInstructionText = (): string => {
     if (currentStepType === 'sum') {
-      return 'Somma i prodotti parziali';
+      const columnLabels = ['unità', 'decine', 'centinaia', 'migliaia'];
+      const columnIndex = state.additionColumnIndex;
+      const label = columnLabels[columnIndex] ?? `colonna ${columnIndex + 1}`;
+      const carryText = state.additionCarry > 0 ? ` Aggiungi anche il riporto ${state.additionCarry}.` : '';
+      return `Somma in colonna i prodotti parziali nelle ${label}.${carryText}`;
     }
     const multiplier = state.num2Digits[state.currentMultiplierIndex];
     const multiplicand = state.num1Digits[state.currentMultiplicandIndex];

@@ -70,6 +70,10 @@ export interface MultiplicationState {
   hints: number; // number of hints used
   errors: number; // number of errors made
   isComplete: boolean;
+  phase: 'multiplication' | 'addition' | 'complete';
+  additionColumnIndex: number;
+  additionCarry: number;
+  finalResultDigits: number[];
 }
 
 // Step validation result
