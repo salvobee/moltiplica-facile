@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, type ReactNode } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { MultiplicationDisplay } from "./MultiplicationDisplay";
@@ -34,8 +34,8 @@ export function GuidedExercise({ num1, num2, difficulty, onComplete, onReset }: 
 
   // Determine current step type
   const getCurrentStepType = (): StepType => {
-    if (state.currentMultiplierIndex >= state.num2Digits.length) {
-      return 'sum'; // Final sum
+    if (state.phase === 'addition' || state.phase === 'complete') {
+      return 'sum';
     }
     return 'multiply';
   };
@@ -55,7 +55,7 @@ export function GuidedExercise({ num1, num2, difficulty, onComplete, onReset }: 
 
       // Advance to next step after a brief delay
       setTimeout(() => {
-        const newState = advanceStep(state);
+        const newState = advanceStep(state, currentStepType);
         setState(newState);
         setCurrentInput(null);
         setIsCorrect(false);
@@ -93,13 +93,42 @@ export function GuidedExercise({ num1, num2, difficulty, onComplete, onReset }: 
     }
   };
 
-  const getInstructionText = (): string => {
+  const getInstructionText = (): ReactNode => {
     if (currentStepType === 'sum') {
-      return 'Somma i prodotti parziali';
+      const columnLabels = ['unità', 'decine', 'centinaia', 'migliaia'];
+      const columnIndex = state.additionColumnIndex;
+      const label = columnLabels[columnIndex] ?? `colonna ${columnIndex + 1}`;
+      return (
+        <>
+          Somma in colonna i prodotti parziali nelle {label}
+          {state.additionCarry > 0 && (
+            <>
+              ,{' '}
+              <span className="text-destructive font-semibold">
+                aggiungendo il riporto di {state.additionCarry}
+              </span>
+            </>
+          )}
+          .
+        </>
+      );
     }
     const multiplier = state.num2Digits[state.currentMultiplierIndex];
     const multiplicand = state.num1Digits[state.currentMultiplicandIndex];
-    return `Moltiplica ${multiplier} × ${multiplicand}${state.currentCarry > 0 ? ` e aggiungi il riporto ${state.currentCarry}` : ''}, scrivendo il risultato completo.`;
+    return (
+      <>
+        Moltiplica {multiplier} × {multiplicand}
+        {state.currentCarry > 0 && (
+          <>
+            ,{' '}
+            <span className="text-destructive font-semibold">
+              aggiungendo il riporto di {state.currentCarry}
+            </span>
+          </>
+        )}
+        , scrivendo il risultato completo.
+      </>
+    );
   };
 
   const instructionText = getInstructionText();
