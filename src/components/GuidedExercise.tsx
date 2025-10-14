@@ -66,7 +66,7 @@ export function GuidedExercise({ num1, num2, difficulty, onComplete, onReset }: 
           setShowFinal(true);
           setTimeout(() => {
             onComplete(score, newState.errors, newState.hints);
-          }, 2000);
+          }, 5000);
         }
       }, 800);
     } else {
