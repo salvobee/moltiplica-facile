@@ -158,7 +158,6 @@ export function GuidedExercise({ num1, num2, difficulty, onComplete, onReset }: 
               isError={isError}
               size="lg"
               autoFocus
-              placeholder="Risultato completo"
               data-testid="input-current-step"
             />
           </div>
