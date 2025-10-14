@@ -22,7 +22,7 @@ function resolveFirebaseConfig(): FirebaseRuntimeConfig {
 
   if (!runtimeConfig) {
     throw new Error(
-      "Configurazione Firebase mancante. Assicurati di compilare client/public/firebase-config.js prima di avviare l'app.",
+      "Configurazione Firebase mancante. Assicurati di compilare public/firebase-config.js prima di avviare l'app.",
     );
   }
 
@@ -31,7 +31,7 @@ function resolveFirebaseConfig(): FirebaseRuntimeConfig {
 
   if (missing.length > 0) {
     throw new Error(
-      `Configurazione Firebase incompleta. Mancano: ${missing.join(", ")}. Aggiorna client/public/firebase-config.js con i valori corretti.`,
+      `Configurazione Firebase incompleta. Mancano: ${missing.join(", ")}. Aggiorna public/firebase-config.js con i valori corretti.`,
     );
   }
 

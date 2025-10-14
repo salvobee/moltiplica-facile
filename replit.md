@@ -44,7 +44,7 @@ Preferred communication style: Simple, everyday language.
 - Firebase Authentication gestisce il login con Google ed Apple direttamente lato client.
 - Cloud Firestore viene utilizzato per sincronizzare statistiche, esercizi e leaderboard.
 - In modalità ospite i dati continuano ad essere salvati in `localStorage` e vengono sincronizzati dopo l'accesso.
-- La configurazione di Firebase viene letta da `client/public/firebase-config.js`, evitando l'uso di variabili `.env`.
+- La configurazione di Firebase viene letta da `public/firebase-config.js`, evitando l'uso di variabili `.env`.
 
 ### External Dependencies
 
