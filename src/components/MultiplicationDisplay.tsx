@@ -1,4 +1,5 @@
 import { MultiplicationState } from "@shared/schema";
+import { cn } from "@/lib/utils";
 
 interface MultiplicationDisplayProps {
   state: MultiplicationState;
@@ -6,7 +7,7 @@ interface MultiplicationDisplayProps {
 }
 
 export function MultiplicationDisplay({ state, showPartialProducts = true }: MultiplicationDisplayProps) {
-  const { num1Digits, num2Digits, partialProducts } = state;
+  const { num1Digits, num2Digits, partialProducts, currentPartialProduct } = state;
 
   // Reverse digits for display (we store them reversed for easier calculation)
   const num1Display = [...num1Digits].reverse();
@@ -25,9 +26,47 @@ export function MultiplicationDisplay({ state, showPartialProducts = true }: Mul
       })
     : [];
 
-  // Calculate max width needed
-  const maxWidth = Math.max(num1Digits.length, num2Digits.length, 
-    ...partialProducts.map(p => p.length + partialProducts.indexOf(p)));
+  const hasActiveStep =
+    !state.isComplete && state.currentMultiplierIndex < state.num2Digits.length;
+
+  const activeMultiplicandDisplayIndex =
+    hasActiveStep && state.currentMultiplicandIndex < state.num1Digits.length
+      ? num1Display.length - 1 - state.currentMultiplicandIndex
+      : null;
+
+  const activeMultiplierDisplayIndex =
+    hasActiveStep && state.currentMultiplierIndex < state.num2Digits.length
+      ? num2Display.length - 1 - state.currentMultiplierIndex
+      : null;
+
+  type PartialRow = {
+    digits: number[];
+    shift: number;
+    renderIndex: number;
+    isPreview: boolean;
+  };
+
+  const partialRows: PartialRow[] = showPartialProducts
+    ? state.partialProducts.map((partial, idx) => ({
+        digits: partial,
+        shift: idx,
+        renderIndex: idx,
+        isPreview: false,
+      }))
+    : [];
+
+  if (
+    showPartialProducts &&
+    currentPartialProduct.length > 0 &&
+    state.currentMultiplierIndex < state.num2Digits.length
+  ) {
+    partialRows.push({
+      digits: currentPartialProduct,
+      shift: state.currentMultiplierIndex,
+      renderIndex: state.currentMultiplierIndex,
+      isPreview: true,
+    });
+  }
 
   return (
     <div className="flex flex-col items-center gap-2 p-6 bg-card border-2 border-card-border rounded-lg">
@@ -44,42 +83,76 @@ export function MultiplicationDisplay({ state, showPartialProducts = true }: Mul
 
       {/* Number 1 - aligned right */}
       <div className="flex justify-end items-center gap-1 font-mono text-4xl sm:text-5xl md:text-6xl font-bold text-foreground">
-        {num1Display.map((digit, idx) => (
-          <div key={idx} className="w-12 sm:w-14 md:w-16 text-center" data-testid={`num1-digit-${idx}`}>
-            {digit}
-          </div>
-        ))}
+        {num1Display.map((digit, idx) => {
+          const isActive = activeMultiplicandDisplayIndex === idx;
+          return (
+            <div
+              key={idx}
+              className={cn(
+                "w-12 sm:w-14 md:w-16 text-center transition-all duration-200",
+                isActive &&
+                  "bg-primary/15 text-primary rounded-lg border border-primary/60 shadow-sm font-extrabold"
+              )}
+              data-testid={`num1-digit-${idx}`}
+            >
+              {digit}
+            </div>
+          );
+        })}
       </div>
 
       {/* Multiplication sign and Number 2 */}
       <div className="flex justify-end items-center gap-1 font-mono text-4xl sm:text-5xl md:text-6xl font-bold text-foreground">
         <span className="w-12 sm:w-14 md:w-16 text-center text-primary">×</span>
-        {num2Display.map((digit, idx) => (
-          <div key={idx} className="w-12 sm:w-14 md:w-16 text-center" data-testid={`num2-digit-${idx}`}>
-            {digit}
-          </div>
-        ))}
+        {num2Display.map((digit, idx) => {
+          const isActive = activeMultiplierDisplayIndex === idx;
+          return (
+            <div
+              key={idx}
+              className={cn(
+                "w-12 sm:w-14 md:w-16 text-center transition-all duration-200",
+                isActive &&
+                  "bg-primary/15 text-primary rounded-lg border border-primary/60 shadow-sm font-extrabold"
+              )}
+              data-testid={`num2-digit-${idx}`}
+            >
+              {digit}
+            </div>
+          );
+        })}
       </div>
 
       {/* Separator line */}
       <div className="w-full border-t-2 border-foreground" />
 
       {/* Partial products */}
-      {showPartialProducts && partialProducts.length > 0 && (
+      {showPartialProducts && partialRows.length > 0 && (
         <div className="flex flex-col gap-1 w-full">
-          {partialProducts.map((partial, partialIdx) => {
-            const partialDisplay = [...partial].reverse();
-            // Add leading zeros based on position
-            const leadingZeros = partialIdx;
-            
+          {partialRows.map((row, rowIdx) => {
+            const partialDisplay = [...row.digits].reverse();
+            const leadingZeros = row.shift;
+
             return (
-              <div key={partialIdx} className="flex justify-end items-center gap-1 font-mono text-3xl sm:text-4xl md:text-5xl font-medium text-muted-foreground">
+              <div
+                key={`${row.isPreview ? 'preview' : 'partial'}-${rowIdx}`}
+                className={cn(
+                  "flex justify-end items-center gap-1 font-mono text-3xl sm:text-4xl md:text-5xl font-medium",
+                  row.isPreview ? "text-primary" : "text-muted-foreground"
+                )}
+              >
                 {partialDisplay.map((digit, digitIdx) => (
-                  <div key={digitIdx} className="w-12 sm:w-14 md:w-16 text-center" data-testid={`partial-${partialIdx}-digit-${digitIdx}`}>
+                  <div
+                    key={digitIdx}
+                    className="w-12 sm:w-14 md:w-16 text-center"
+                    data-testid={
+                      row.isPreview
+                        ? `partial-preview-digit-${digitIdx}`
+                        : `partial-${row.renderIndex}-digit-${digitIdx}`
+                    }
+                  >
                     {digit}
                   </div>
                 ))}
-                {/* Show leading zeros */}
                 {Array.from({ length: leadingZeros }).map((_, idx) => (
                   <div key={`zero-${idx}`} className="w-12 sm:w-14 md:w-16 text-center text-muted-foreground/50">
                     0
@@ -90,7 +163,7 @@ export function MultiplicationDisplay({ state, showPartialProducts = true }: Mul
           })}
 
           {/* Final separator if we have multiple partial products */}
-          {partialProducts.length > 1 && (
+          {state.partialProducts.length > 1 && (
             <div className="w-full border-t-2 border-foreground mt-2" />
           )}
         </div>
