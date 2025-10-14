@@ -123,7 +123,7 @@ export function MultiplicationDisplay({ state, showPartialProducts = true }: Mul
         <td
           key={`col-${colIdx}`}
           className={cn(
-            "w-12 sm:w-14 md:w-16 h-12 sm:h-14 md:h-16 text-center align-bottom font-mono",
+            "w-9 sm:w-11 md:w-12 h-12 sm:h-14 md:h-16 text-center align-bottom font-mono",
             className
           )}
           data-testid={testId}
@@ -136,14 +136,14 @@ export function MultiplicationDisplay({ state, showPartialProducts = true }: Mul
 
   return (
     <div className="flex flex-col items-center gap-2 p-6 bg-card border-2 border-card-border rounded-lg">
-      <table className="w-full table-fixed border-separate border-spacing-x-1">
+      <table className="w-full table-fixed">
         <tbody>
           {showCarryRow && (
             <tr className="text-lg sm:text-xl md:text-2xl text-primary font-semibold">
               {createDigitCells(carryIndicators, {
                 placeholder: <span className="opacity-0">0</span>,
               })}
-              <td className="w-12 sm:w-14 md:w-16" />
+              <td className="w-9 sm:w-11 md:w-12" />
             </tr>
           )}
 
@@ -156,7 +156,7 @@ export function MultiplicationDisplay({ state, showPartialProducts = true }: Mul
                 "bg-primary/15 text-primary rounded-lg border border-primary/60 shadow-sm font-extrabold",
               placeholder: <span />,
             })}
-            <td className="w-12 sm:w-14 md:w-16 text-center text-primary align-bottom">×</td>
+            <td className="w-9 sm:w-11 md:w-12 text-center text-primary align-bottom">×</td>
           </tr>
 
           <tr className="text-4xl sm:text-5xl md:text-6xl font-bold text-foreground">
@@ -168,7 +168,7 @@ export function MultiplicationDisplay({ state, showPartialProducts = true }: Mul
                 "bg-primary/15 text-primary rounded-lg border border-primary/60 shadow-sm font-extrabold",
               placeholder: <span />,
             })}
-            <td className="w-12 sm:w-14 md:w-16 text-center text-primary align-bottom">=</td>
+            <td className="w-9 sm:w-11 md:w-12 text-center text-primary align-bottom">=</td>
           </tr>
 
           <tr>
@@ -198,7 +198,7 @@ export function MultiplicationDisplay({ state, showPartialProducts = true }: Mul
                         : `partial-${row.renderIndex}-digit-${idx}`,
                     placeholder: <span />,
                   })}
-                  <td className="w-12 sm:w-14 md:w-16" />
+                  <td className="w-9 sm:w-11 md:w-12" />
                 </tr>
               );
             })}
