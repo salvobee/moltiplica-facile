@@ -9,11 +9,11 @@ import type { DifficultyLevel, Exercise } from "@shared/schema";
 import { Calculator } from "lucide-react";
 import type { User as FirebaseUser } from "firebase/auth";
 
-interface GuidedModeProps {
+interface MultiplicationGuidedModeProps {
   user?: FirebaseUser | null;
 }
 
-export default function GuidedMode({ user }: GuidedModeProps) {
+export default function MultiplicationGuidedMode({ user }: MultiplicationGuidedModeProps) {
   const [num1, setNum1] = useState<string>("");
   const [num2, setNum2] = useState<string>("");
   const [started, setStarted] = useState(false);
@@ -55,7 +55,7 @@ export default function GuidedMode({ user }: GuidedModeProps) {
       num1: n1,
       num2: n2,
       difficulty,
-      mode: 'guided',
+      mode: "guided",
       startedAt: Date.now() - 60000,
       completedAt: Date.now(),
       score,
@@ -124,10 +124,10 @@ export default function GuidedMode({ user }: GuidedModeProps) {
     <div className="flex flex-col items-center gap-6 p-6 max-w-2xl mx-auto">
       <div className="text-center mb-4">
         <h1 className="text-3xl sm:text-4xl font-bold text-slate-800 mb-2">
-          Esercizi Guidati
+          Moltiplicazioni guidate
         </h1>
         <p className="text-lg text-slate-600">
-          Inserisci due numeri e ti guiderò passo dopo passo!
+          Inserisci moltiplicando e moltiplicatore: ti guideremo passo passo nella moltiplicazione in colonna.
         </p>
       </div>
 
@@ -136,7 +136,7 @@ export default function GuidedMode({ user }: GuidedModeProps) {
           <div className="flex flex-col gap-6">
             <div className="space-y-2">
               <Label htmlFor="num1" className="text-lg font-semibold">
-                Primo numero (moltiplicando)
+                Moltiplicando
               </Label>
               <Input
                 id="num1"
@@ -158,7 +158,7 @@ export default function GuidedMode({ user }: GuidedModeProps) {
 
             <div className="space-y-2">
               <Label htmlFor="num2" className="text-lg font-semibold">
-                Secondo numero (moltiplicatore)
+                Moltiplicatore
               </Label>
               <Input
                 id="num2"
@@ -180,15 +180,14 @@ export default function GuidedMode({ user }: GuidedModeProps) {
               data-testid="button-start-guided"
             >
               <Calculator className="w-5 h-5 mr-2" />
-              Inizia Esercizio
+              Inizia la moltiplicazione
             </Button>
           </div>
         </CardContent>
       </Card>
 
       <div className="text-sm text-slate-600 text-center max-w-md">
-        Ti guiderò attraverso ogni passaggio della moltiplicazione in colonna,
-        aiutandoti a calcolare i riporti e i prodotti parziali!
+        Ti guideremo attraverso ogni passaggio della moltiplicazione in colonna, dai prodotti parziali alle somme finali.
       </div>
     </div>
   );
