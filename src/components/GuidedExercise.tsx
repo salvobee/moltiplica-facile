@@ -4,13 +4,13 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { MultiplicationDisplay } from "./MultiplicationDisplay";
 import { NumberInput } from "./NumberInput";
 import { HintCard } from "./HintCard";
-import { 
-  initializeMultiplication, 
-  validateStep, 
-  getHintMessage, 
+import {
+  initializeMultiplication,
+  validateStep,
+  getHintMessage,
   advanceStep,
   calculateFinalResult,
-  calculateScore
+  calculateMultiplicationScore,
 } from "@/lib/multiplicationLogic";
 import type { MultiplicationState, StepType, DifficultyLevel } from "@shared/schema";
 import { ArrowRight, HelpCircle, RotateCcw } from "lucide-react";
@@ -73,7 +73,11 @@ export function GuidedExercise({ num1, num2, difficulty, onComplete, onReset }: 
 
         // Check if exercise is complete
         if (newState.isComplete) {
-          const score = calculateScore(difficulty, newState.errors, newState.hints);
+          const score = calculateMultiplicationScore(
+            difficulty,
+            newState.errors,
+            newState.hints
+          );
           setShowFinal(true);
           setTimeout(() => {
             onComplete(score, newState.errors, newState.hints);

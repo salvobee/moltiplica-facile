@@ -2,17 +2,25 @@ import { useEffect } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Trophy, Star, RotateCcw } from "lucide-react";
-import type { DifficultyLevel } from "@shared/schema";
+import type { DifficultyLevel, OperationType } from "@shared/schema";
 
 interface CompletionCelebrationProps {
   score: number;
   difficulty: DifficultyLevel;
+  operation: OperationType;
   errors: number;
   hints: number;
   onNewExercise: () => void;
 }
 
-export function CompletionCelebration({ score, difficulty, errors, hints, onNewExercise }: CompletionCelebrationProps) {
+export function CompletionCelebration({
+  score,
+  difficulty,
+  operation,
+  errors,
+  hints,
+  onNewExercise,
+}: CompletionCelebrationProps) {
   useEffect(() => {
     // Create confetti effect
     const colors = ['#3b82f6', '#fbbf24', '#10b981', '#8b5cf6'];
@@ -33,11 +41,19 @@ export function CompletionCelebration({ score, difficulty, errors, hints, onNewE
   }, []);
 
   const getMessage = () => {
-    if (score >= 350) return "Incredibile! Sei un maestro delle moltiplicazioni!";
-    if (score >= 250) return "Fantastico! Sei un campione!";
-    if (score >= 150) return "Ottimo lavoro! Continua così!";
-    return "Ben fatto! Continua a esercitarti!";
+    const focus = operation === 'division' ? 'divisioni' : 'moltiplicazioni';
+    const thresholds = operation === 'division'
+      ? { great: 260, good: 190, ok: 120 }
+      : { great: 350, good: 250, ok: 150 };
+
+    if (score >= thresholds.great) return `Incredibile! Sei un maestro delle ${focus}!`;
+    if (score >= thresholds.good) return `Fantastico! Sei un campione delle ${focus}!`;
+    if (score >= thresholds.ok) return `Ottimo lavoro con le ${focus}!`;
+    return `Ben fatto! Continua a esercitarti con le ${focus}!`;
   };
+
+  const operationSymbol = operation === 'division' ? '÷' : '×';
+  const operationLabel = operation === 'division' ? 'Divisione' : 'Moltiplicazione';
 
   return (
     <div className="flex flex-col items-center gap-6 p-6 max-w-2xl mx-auto">
@@ -63,6 +79,10 @@ export function CompletionCelebration({ score, difficulty, errors, hints, onNewE
             <div className="flex flex-col items-center gap-2">
               <div className="text-3xl font-bold text-sky-600">{difficulty}</div>
               <div className="text-sm text-slate-600 text-center">Difficoltà</div>
+            </div>
+            <div className="flex flex-col items-center gap-2">
+              <div className="text-3xl font-bold text-sky-600">{operationSymbol}</div>
+              <div className="text-sm text-slate-600 text-center">{operationLabel}</div>
             </div>
             <div className="flex flex-col items-center gap-2">
               <div className="text-3xl font-bold text-rose-500">{errors}</div>

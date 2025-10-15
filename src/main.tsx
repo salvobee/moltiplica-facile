@@ -1,5 +1,3 @@
-/// <reference types="vite-plugin-pwa/pwa-assets" />
-
 import { createRoot } from "react-dom/client";
 import App from "./App";
 import "./index.css";

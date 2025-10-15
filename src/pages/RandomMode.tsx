@@ -2,9 +2,11 @@ import { useState } from "react";
 import { DifficultySelector } from "@/components/DifficultySelector";
 import { GuidedExercise } from "@/components/GuidedExercise";
 import { CompletionCelebration } from "@/components/CompletionCelebration";
+import { DivisionExercise } from "@/components/DivisionExercise";
 import { generateRandomExercise } from "@/lib/multiplicationLogic";
-import type { DifficultyLevel, Exercise } from "@shared/schema";
+import type { DifficultyLevel, Exercise, OperationType } from "@shared/schema";
 import type { User as FirebaseUser } from "firebase/auth";
+import { Button } from "@/components/ui/button";
 
 interface RandomModeProps {
   user?: FirebaseUser | null;
@@ -12,6 +14,7 @@ interface RandomModeProps {
 
 export default function RandomMode({ user }: RandomModeProps) {
   const [difficulty, setDifficulty] = useState<DifficultyLevel | null>(null);
+  const [operation, setOperation] = useState<OperationType>('multiplication');
   const [num1, setNum1] = useState(0);
   const [num2, setNum2] = useState(0);
   const [started, setStarted] = useState(false);
@@ -20,9 +23,16 @@ export default function RandomMode({ user }: RandomModeProps) {
   const [lastErrors, setLastErrors] = useState(0);
   const [lastHints, setLastHints] = useState(0);
 
+  const handleOperationSelect = (value: OperationType) => {
+    setOperation(value);
+    setDifficulty(null);
+    setStarted(false);
+    setShowCelebration(false);
+  };
+
   const handleDifficultySelect = (level: DifficultyLevel) => {
     setDifficulty(level);
-    const exercise = generateRandomExercise(level);
+    const exercise = generateRandomExercise(operation, level);
     setNum1(exercise.num1);
     setNum2(exercise.num2);
     setStarted(true);
@@ -40,6 +50,7 @@ export default function RandomMode({ user }: RandomModeProps) {
       num1,
       num2,
       difficulty: difficulty!,
+      operation,
       mode: 'random',
       startedAt: Date.now() - 60000,
       completedAt: Date.now(),
@@ -56,7 +67,10 @@ export default function RandomMode({ user }: RandomModeProps) {
       stats.totalExercises++;
       stats.totalScore += score;
       if (difficulty) {
-        stats.exercisesByDifficulty[difficulty]++;
+        stats.exercisesByOperation[operation] =
+          (stats.exercisesByOperation[operation] ?? 0) + 1;
+        stats.exercisesByDifficulty[operation][difficulty] =
+          (stats.exercisesByDifficulty[operation][difficulty] ?? 0) + 1;
       }
       updateGuestStats(stats);
       addGuestExercise(exercise);
@@ -80,6 +94,7 @@ export default function RandomMode({ user }: RandomModeProps) {
       <CompletionCelebration
         score={lastScore}
         difficulty={difficulty}
+        operation={operation}
         errors={lastErrors}
         hints={lastHints}
         onNewExercise={handleNewExercise}
@@ -88,6 +103,18 @@ export default function RandomMode({ user }: RandomModeProps) {
   }
 
   if (started && difficulty) {
+    if (operation === 'division') {
+      return (
+        <DivisionExercise
+          dividend={num1}
+          divisor={num2}
+          difficulty={difficulty}
+          onComplete={handleComplete}
+          onReset={handleReset}
+        />
+      );
+    }
+
     return (
       <GuidedExercise
         num1={num1}
@@ -106,14 +133,52 @@ export default function RandomMode({ user }: RandomModeProps) {
           Esercizi a Caso
         </h1>
         <p className="text-lg text-slate-600">
-          Scegli il livello di difficoltà e sfida te stesso!
+          Allenati con moltiplicazioni e divisioni scegliendo operazione e livello di difficoltà!
         </p>
       </div>
 
-      <DifficultySelector onSelect={handleDifficultySelect} />
+      <div className="flex flex-wrap justify-center gap-3">
+        {(
+          [
+            {
+              value: 'multiplication' as OperationType,
+              label: 'Moltiplicazioni',
+              symbol: '×',
+              description: 'Prodotti in colonna',
+            },
+            {
+              value: 'division' as OperationType,
+              label: 'Divisioni',
+              symbol: '÷',
+              description: 'Divisioni con quoziente e resto',
+            },
+          ] satisfies {
+            value: OperationType;
+            label: string;
+            symbol: string;
+            description: string;
+          }[]
+        ).map((option) => (
+          <Button
+            key={option.value}
+            variant={operation === option.value ? 'default' : 'outline'}
+            onClick={() => handleOperationSelect(option.value)}
+            className="gap-3 px-4 py-6 h-auto"
+            data-testid={`button-operation-${option.value}`}
+          >
+            <span className="text-3xl font-bold text-sky-600">{option.symbol}</span>
+            <span className="flex flex-col items-start">
+              <span className="text-base font-semibold text-slate-800">{option.label}</span>
+              <span className="text-xs text-slate-500">{option.description}</span>
+            </span>
+          </Button>
+        ))}
+      </div>
+
+      <DifficultySelector onSelect={handleDifficultySelect} operation={operation} />
 
       <div className="text-sm text-slate-600 text-center max-w-md mt-4">
-        Completa esercizi casuali per guadagnare punti e salire nella classifica!
+        Completa esercizi casuali di {operation === 'division' ? 'divisione' : 'moltiplicazione'} per guadagnare punti e salire nella classifica!
       </div>
     </div>
   );

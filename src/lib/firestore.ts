@@ -46,17 +46,50 @@ export async function getUserStats(userId: string): Promise<UserStats | null> {
   }
   
   const data = userSnap.data();
-  const difficultyCounts = data.exercisesByDifficulty || { 1: 0, 2: 0, 3: 0, 4: 0 };
+  const rawDifficulty = data.exercisesByDifficulty ?? {};
+
+  const normalizedDifficulty: UserStats['exercisesByDifficulty'] = rawDifficulty.multiplication
+    ? {
+        multiplication: {
+          1: rawDifficulty.multiplication?.[1] ?? 0,
+          2: rawDifficulty.multiplication?.[2] ?? 0,
+          3: rawDifficulty.multiplication?.[3] ?? 0,
+          4: rawDifficulty.multiplication?.[4] ?? 0,
+        },
+        division: {
+          1: rawDifficulty.division?.[1] ?? 0,
+          2: rawDifficulty.division?.[2] ?? 0,
+          3: rawDifficulty.division?.[3] ?? 0,
+          4: rawDifficulty.division?.[4] ?? 0,
+        },
+      }
+    : {
+        multiplication: {
+          1: rawDifficulty[1] ?? 0,
+          2: rawDifficulty[2] ?? 0,
+          3: rawDifficulty[3] ?? 0,
+          4: rawDifficulty[4] ?? 0,
+        },
+        division: { 1: 0, 2: 0, 3: 0, 4: 0 },
+      };
+
+  const rawOperation = data.exercisesByOperation ?? {};
+  const multiplicationTotal =
+    rawOperation.multiplication ??
+    Object.values(normalizedDifficulty.multiplication).reduce((sum, value) => sum + (value ?? 0), 0);
+  const divisionTotal =
+    rawOperation.division ??
+    Object.values(normalizedDifficulty.division).reduce((sum, value) => sum + (value ?? 0), 0);
+
   return {
     userId,
-    totalExercises: data.totalExercises || 0,
+    totalExercises: data.totalExercises ?? multiplicationTotal + divisionTotal,
     totalScore: data.totalScore || 0,
-    exercisesByDifficulty: {
-      1: difficultyCounts[1] || 0,
-      2: difficultyCounts[2] || 0,
-      3: difficultyCounts[3] || 0,
-      4: difficultyCounts[4] || 0,
+    exercisesByOperation: {
+      multiplication: multiplicationTotal,
+      division: divisionTotal,
     },
+    exercisesByDifficulty: normalizedDifficulty,
     lastUpdated: (data.lastUpdated as Timestamp)?.toMillis() || Date.now(),
   };
 }
@@ -86,32 +119,86 @@ export async function saveExercise(userId: string, exercise: Exercise): Promise<
       userId,
       totalExercises: 1,
       totalScore: exercise.score || 0,
+      exercisesByOperation: {
+        multiplication: exercise.operation === 'multiplication' ? 1 : 0,
+        division: exercise.operation === 'division' ? 1 : 0,
+      },
       exercisesByDifficulty: {
-        1: exercise.difficulty === 1 ? 1 : 0,
-        2: exercise.difficulty === 2 ? 1 : 0,
-        3: exercise.difficulty === 3 ? 1 : 0,
-        4: exercise.difficulty === 4 ? 1 : 0,
+        multiplication: {
+          1: exercise.operation === 'multiplication' && exercise.difficulty === 1 ? 1 : 0,
+          2: exercise.operation === 'multiplication' && exercise.difficulty === 2 ? 1 : 0,
+          3: exercise.operation === 'multiplication' && exercise.difficulty === 3 ? 1 : 0,
+          4: exercise.operation === 'multiplication' && exercise.difficulty === 4 ? 1 : 0,
+        },
+        division: {
+          1: exercise.operation === 'division' && exercise.difficulty === 1 ? 1 : 0,
+          2: exercise.operation === 'division' && exercise.difficulty === 2 ? 1 : 0,
+          3: exercise.operation === 'division' && exercise.difficulty === 3 ? 1 : 0,
+          4: exercise.operation === 'division' && exercise.difficulty === 4 ? 1 : 0,
+        },
       },
       lastUpdated: serverTimestamp(),
     });
   } else {
     // Update stats
     const currentStats = userSnap.data();
-    const currentDifficultyCounts = {
-      1: currentStats.exercisesByDifficulty?.[1] || 0,
-      2: currentStats.exercisesByDifficulty?.[2] || 0,
-      3: currentStats.exercisesByDifficulty?.[3] || 0,
-      4: currentStats.exercisesByDifficulty?.[4] || 0,
+    const rawDifficulty = currentStats.exercisesByDifficulty ?? {};
+    const normalizedDifficulty: UserStats['exercisesByDifficulty'] = rawDifficulty.multiplication
+      ? {
+          multiplication: {
+            1: rawDifficulty.multiplication?.[1] ?? 0,
+            2: rawDifficulty.multiplication?.[2] ?? 0,
+            3: rawDifficulty.multiplication?.[3] ?? 0,
+            4: rawDifficulty.multiplication?.[4] ?? 0,
+          },
+          division: {
+            1: rawDifficulty.division?.[1] ?? 0,
+            2: rawDifficulty.division?.[2] ?? 0,
+            3: rawDifficulty.division?.[3] ?? 0,
+            4: rawDifficulty.division?.[4] ?? 0,
+          },
+        }
+      : {
+          multiplication: {
+            1: rawDifficulty[1] ?? 0,
+            2: rawDifficulty[2] ?? 0,
+            3: rawDifficulty[3] ?? 0,
+            4: rawDifficulty[4] ?? 0,
+          },
+          division: { 1: 0, 2: 0, 3: 0, 4: 0 },
+        };
+
+    const rawOperations = currentStats.exercisesByOperation ?? {
+      multiplication: Object.values(normalizedDifficulty.multiplication).reduce(
+        (sum, value) => sum + (value ?? 0),
+        0
+      ),
+      division: Object.values(normalizedDifficulty.division).reduce(
+        (sum, value) => sum + (value ?? 0),
+        0
+      ),
     };
-    const newDifficultyCount = {
-      ...currentDifficultyCounts,
-      [exercise.difficulty]: (currentDifficultyCounts[exercise.difficulty] || 0) + 1,
+
+    const operationKey = exercise.operation ?? 'multiplication';
+
+    const updatedOperations = {
+      multiplication: rawOperations.multiplication + (operationKey === 'multiplication' ? 1 : 0),
+      division: rawOperations.division + (operationKey === 'division' ? 1 : 0),
     };
-    
+
+    const updatedDifficulty = {
+      ...normalizedDifficulty,
+      [operationKey]: {
+        ...normalizedDifficulty[operationKey],
+        [exercise.difficulty]: (normalizedDifficulty[operationKey][exercise.difficulty] ?? 0) + 1,
+      },
+    };
+
     await updateDoc(userRef, {
       totalExercises: increment(1),
       totalScore: increment(exercise.score || 0),
-      exercisesByDifficulty: newDifficultyCount,
+      exercisesByOperation: updatedOperations,
+      exercisesByDifficulty: updatedDifficulty,
       lastUpdated: serverTimestamp(),
     });
   }
@@ -142,6 +229,7 @@ export async function getUserExercises(userId: string, limitCount: number = 50):
       num2: data.num2,
       difficulty: data.difficulty,
       mode: data.mode,
+      operation: data.operation ?? 'multiplication',
       startedAt: data.startedAt,
       completedAt: data.completedAt,
       score: data.score,
@@ -218,11 +306,35 @@ export async function syncLocalDataToCloud(userId: string, localStats: UserStats
       userId,
       totalExercises: cloudStats.totalExercises + localStats.totalExercises,
       totalScore: cloudStats.totalScore + localStats.totalScore,
+      exercisesByOperation: {
+        multiplication:
+          cloudStats.exercisesByOperation.multiplication +
+          (localStats.exercisesByOperation?.multiplication ?? 0),
+        division:
+          cloudStats.exercisesByOperation.division +
+          (localStats.exercisesByOperation?.division ?? 0),
+      },
       exercisesByDifficulty: {
-        1: cloudStats.exercisesByDifficulty[1] + localStats.exercisesByDifficulty[1],
-        2: cloudStats.exercisesByDifficulty[2] + localStats.exercisesByDifficulty[2],
-        3: cloudStats.exercisesByDifficulty[3] + localStats.exercisesByDifficulty[3],
-        4: cloudStats.exercisesByDifficulty[4] + localStats.exercisesByDifficulty[4],
+        multiplication: {
+          1: cloudStats.exercisesByDifficulty.multiplication[1] +
+            (localStats.exercisesByDifficulty.multiplication?.[1] ?? 0),
+          2: cloudStats.exercisesByDifficulty.multiplication[2] +
+            (localStats.exercisesByDifficulty.multiplication?.[2] ?? 0),
+          3: cloudStats.exercisesByDifficulty.multiplication[3] +
+            (localStats.exercisesByDifficulty.multiplication?.[3] ?? 0),
+          4: cloudStats.exercisesByDifficulty.multiplication[4] +
+            (localStats.exercisesByDifficulty.multiplication?.[4] ?? 0),
+        },
+        division: {
+          1: cloudStats.exercisesByDifficulty.division[1] +
+            (localStats.exercisesByDifficulty.division?.[1] ?? 0),
+          2: cloudStats.exercisesByDifficulty.division[2] +
+            (localStats.exercisesByDifficulty.division?.[2] ?? 0),
+          3: cloudStats.exercisesByDifficulty.division[3] +
+            (localStats.exercisesByDifficulty.division?.[3] ?? 0),
+          4: cloudStats.exercisesByDifficulty.division[4] +
+            (localStats.exercisesByDifficulty.division?.[4] ?? 0),
+        },
       },
       lastUpdated: Date.now(),
     };

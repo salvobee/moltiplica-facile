@@ -6,20 +6,75 @@ export function getGuestStats(): UserStats {
     const defaultStats: UserStats = {
       totalExercises: 0,
       totalScore: 0,
-      exercisesByDifficulty: { 1: 0, 2: 0, 3: 0, 4: 0 },
+      exercisesByOperation: { multiplication: 0, division: 0 },
+      exercisesByDifficulty: {
+        multiplication: { 1: 0, 2: 0, 3: 0, 4: 0 },
+        division: { 1: 0, 2: 0, 3: 0, 4: 0 },
+      },
       lastUpdated: Date.now(),
     };
     return defaultStats;
   }
-  const parsed = JSON.parse(stored) as UserStats;
+
+  const parsed = JSON.parse(stored) as Partial<UserStats> & {
+    exercisesByDifficulty?: any;
+    exercisesByOperation?: Partial<Record<'multiplication' | 'division', number>>;
+  };
+
+  const legacyDifficulty = parsed.exercisesByDifficulty as
+    | UserStats['exercisesByDifficulty']
+    | Partial<Record<1 | 2 | 3 | 4, number>>
+    | undefined;
+
+  const normalizedDifficulty: UserStats['exercisesByDifficulty'] =
+    legacyDifficulty && 'multiplication' in legacyDifficulty
+      ? {
+          multiplication: {
+            1: legacyDifficulty.multiplication?.[1] ?? 0,
+            2: legacyDifficulty.multiplication?.[2] ?? 0,
+            3: legacyDifficulty.multiplication?.[3] ?? 0,
+            4: legacyDifficulty.multiplication?.[4] ?? 0,
+          },
+          division: {
+            1: legacyDifficulty.division?.[1] ?? 0,
+            2: legacyDifficulty.division?.[2] ?? 0,
+            3: legacyDifficulty.division?.[3] ?? 0,
+            4: legacyDifficulty.division?.[4] ?? 0,
+          },
+        }
+      : {
+          multiplication: {
+            1: (legacyDifficulty as Partial<Record<1 | 2 | 3 | 4, number>>)?.[1] ?? 0,
+            2: (legacyDifficulty as Partial<Record<1 | 2 | 3 | 4, number>>)?.[2] ?? 0,
+            3: (legacyDifficulty as Partial<Record<1 | 2 | 3 | 4, number>>)?.[3] ?? 0,
+            4: (legacyDifficulty as Partial<Record<1 | 2 | 3 | 4, number>>)?.[4] ?? 0,
+          },
+          division: { 1: 0, 2: 0, 3: 0, 4: 0 },
+        };
+
+  const legacyDifficultyValues = legacyDifficulty && !('multiplication' in (legacyDifficulty as any))
+    ? Object.values(legacyDifficulty as Partial<Record<1 | 2 | 3 | 4, number>>).reduce(
+        (sum, value) => sum + (value ?? 0),
+        0
+      )
+    : 0;
+
+  const normalizedOperation: UserStats['exercisesByOperation'] = {
+    multiplication:
+      parsed.exercisesByOperation?.multiplication ??
+      (legacyDifficultyValues > 0
+        ? legacyDifficultyValues
+        : parsed.totalExercises ?? 0),
+    division: parsed.exercisesByOperation?.division ?? 0,
+  };
+
   return {
-    ...parsed,
-    exercisesByDifficulty: {
-      1: parsed.exercisesByDifficulty?.[1] ?? 0,
-      2: parsed.exercisesByDifficulty?.[2] ?? 0,
-      3: parsed.exercisesByDifficulty?.[3] ?? 0,
-      4: parsed.exercisesByDifficulty?.[4] ?? 0,
-    },
+    userId: parsed.userId,
+    totalExercises: parsed.totalExercises ?? normalizedOperation.multiplication + normalizedOperation.division,
+    totalScore: parsed.totalScore ?? 0,
+    exercisesByOperation: normalizedOperation,
+    exercisesByDifficulty: normalizedDifficulty,
+    lastUpdated: parsed.lastUpdated ?? Date.now(),
   };
 }
 
@@ -33,7 +88,11 @@ export function updateGuestStats(stats: UserStats): void {
 export function getGuestExercises(): Exercise[] {
   const stored = localStorage.getItem(STORAGE_KEYS.GUEST_EXERCISES);
   if (!stored) return [];
-  return JSON.parse(stored);
+  const parsed = JSON.parse(stored) as Exercise[];
+  return parsed.map((exercise) => ({
+    ...exercise,
+    operation: exercise.operation ?? 'multiplication',
+  }));
 }
 
 export function addGuestExercise(exercise: Exercise): void {
