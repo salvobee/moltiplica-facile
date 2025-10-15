@@ -1,19 +1,19 @@
 import { useState } from "react";
 import { DifficultySelector } from "@/components/DifficultySelector";
-import { GuidedExercise } from "@/components/GuidedExercise";
+import { DivisionExercise } from "@/components/DivisionExercise";
 import { CompletionCelebration } from "@/components/CompletionCelebration";
-import { generateRandomExercise } from "@/lib/multiplicationLogic";
+import { generateRandomDivisionExercise } from "@/lib/divisionLogic";
 import type { DifficultyLevel, Exercise } from "@shared/schema";
 import type { User as FirebaseUser } from "firebase/auth";
 
-interface RandomModeProps {
+interface DivisionRandomModeProps {
   user?: FirebaseUser | null;
 }
 
-export default function RandomMode({ user }: RandomModeProps) {
+export default function DivisionRandomMode({ user }: DivisionRandomModeProps) {
   const [difficulty, setDifficulty] = useState<DifficultyLevel | null>(null);
-  const [num1, setNum1] = useState(0);
-  const [num2, setNum2] = useState(0);
+  const [dividend, setDividend] = useState(0);
+  const [divisor, setDivisor] = useState(1);
   const [started, setStarted] = useState(false);
   const [showCelebration, setShowCelebration] = useState(false);
   const [lastScore, setLastScore] = useState(0);
@@ -22,9 +22,9 @@ export default function RandomMode({ user }: RandomModeProps) {
 
   const handleDifficultySelect = (level: DifficultyLevel) => {
     setDifficulty(level);
-    const exercise = generateRandomExercise(level);
-    setNum1(exercise.num1);
-    setNum2(exercise.num2);
+    const exercise = generateRandomDivisionExercise(level);
+    setDividend(exercise.dividend);
+    setDivisor(exercise.divisor);
     setStarted(true);
     setShowCelebration(false);
   };
@@ -37,11 +37,11 @@ export default function RandomMode({ user }: RandomModeProps) {
 
     const exercise: Exercise = {
       id: Date.now().toString(),
-      num1,
-      num2,
+      num1: dividend,
+      num2: divisor,
       difficulty: difficulty!,
       mode: 'random',
-      operation: 'multiplication',
+      operation: 'division',
       startedAt: Date.now() - 60000,
       completedAt: Date.now(),
       score,
@@ -90,9 +90,9 @@ export default function RandomMode({ user }: RandomModeProps) {
 
   if (started && difficulty) {
     return (
-      <GuidedExercise
-        num1={num1}
-        num2={num2}
+      <DivisionExercise
+        dividend={dividend}
+        divisor={divisor}
         difficulty={difficulty}
         onComplete={handleComplete}
         onReset={handleReset}
@@ -104,17 +104,17 @@ export default function RandomMode({ user }: RandomModeProps) {
     <div className="flex flex-col items-center gap-6 p-6">
       <div className="text-center mb-4">
         <h1 className="text-3xl sm:text-4xl font-bold text-slate-800 mb-2">
-          Esercizi a Caso
+          Divisioni Casuali
         </h1>
         <p className="text-lg text-slate-600">
-          Scegli il livello di difficoltà e sfida te stesso!
+          Scegli il livello di difficoltà e affronta nuove divisioni in colonna!
         </p>
       </div>
 
       <DifficultySelector onSelect={handleDifficultySelect} />
 
       <div className="text-sm text-slate-600 text-center max-w-md mt-4">
-        Completa esercizi casuali per guadagnare punti e salire nella classifica!
+        Risolvi divisioni casuali per allenarti con quozienti e resti sempre diversi!
       </div>
     </div>
   );

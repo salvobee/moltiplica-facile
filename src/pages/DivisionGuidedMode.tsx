@@ -3,37 +3,37 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { GuidedExercise } from "@/components/GuidedExercise";
+import { DivisionExercise } from "@/components/DivisionExercise";
 import { CompletionCelebration } from "@/components/CompletionCelebration";
 import type { DifficultyLevel, Exercise } from "@shared/schema";
-import { Calculator } from "lucide-react";
+import { DivideSquare } from "lucide-react";
 import type { User as FirebaseUser } from "firebase/auth";
 
-interface GuidedModeProps {
+interface DivisionGuidedModeProps {
   user?: FirebaseUser | null;
 }
 
-export default function GuidedMode({ user }: GuidedModeProps) {
-  const [num1, setNum1] = useState<string>("");
-  const [num2, setNum2] = useState<string>("");
+export default function DivisionGuidedMode({ user }: DivisionGuidedModeProps) {
+  const [dividend, setDividend] = useState<string>("");
+  const [divisor, setDivisor] = useState<string>("");
   const [started, setStarted] = useState(false);
   const [showCelebration, setShowCelebration] = useState(false);
   const [lastScore, setLastScore] = useState(0);
   const [lastErrors, setLastErrors] = useState(0);
   const [lastHints, setLastHints] = useState(0);
 
-  const determineDifficulty = (n1: number, n2: number): DifficultyLevel => {
-    const digits1 = Math.max(String(Math.abs(n1)).length, 1);
-    const digits2 = Math.max(String(Math.abs(n2)).length, 1);
+  const determineDifficulty = (d: number, v: number): DifficultyLevel => {
+    const digitsDividend = Math.max(String(Math.abs(d)).length, 1);
+    const digitsDivisor = Math.max(String(Math.abs(v)).length, 1);
 
-    if (digits1 >= 3 && digits2 >= 3) return 4;
-    if ((digits1 >= 3 && digits2 >= 2) || (digits1 >= 2 && digits2 >= 3)) return 3;
-    if (digits1 >= 2 && digits2 >= 2) return 2;
+    if (digitsDividend >= 5 || digitsDivisor >= 3) return 4;
+    if (digitsDividend >= 4 || digitsDivisor >= 2) return 3;
+    if (digitsDividend >= 3) return 2;
     return 1;
   };
 
   const handleStart = () => {
-    if (num1 && num2) {
+    if (dividend && divisor) {
       setStarted(true);
       setShowCelebration(false);
     }
@@ -45,18 +45,17 @@ export default function GuidedMode({ user }: GuidedModeProps) {
     setLastHints(hints);
     setShowCelebration(true);
 
-    // Determine difficulty based on numbers
-    const n1 = parseInt(num1);
-    const n2 = parseInt(num2);
-    const difficulty = determineDifficulty(n1, n2);
+    const dividendValue = parseInt(dividend);
+    const divisorValue = Math.max(1, parseInt(divisor));
+    const difficulty = determineDifficulty(dividendValue, divisorValue);
 
     const exercise: Exercise = {
       id: Date.now().toString(),
-      num1: n1,
-      num2: n2,
+      num1: dividendValue,
+      num2: divisorValue,
       difficulty,
       mode: 'guided',
-      operation: 'multiplication',
+      operation: 'division',
       startedAt: Date.now() - 60000,
       completedAt: Date.now(),
       score,
@@ -80,8 +79,8 @@ export default function GuidedMode({ user }: GuidedModeProps) {
   const handleNewExercise = () => {
     setStarted(false);
     setShowCelebration(false);
-    setNum1("");
-    setNum2("");
+    setDividend("");
+    setDivisor("");
   };
 
   const handleReset = () => {
@@ -90,9 +89,9 @@ export default function GuidedMode({ user }: GuidedModeProps) {
   };
 
   if (showCelebration) {
-    const n1 = parseInt(num1);
-    const n2 = parseInt(num2);
-    const difficulty = determineDifficulty(n1, n2);
+    const dividendValue = parseInt(dividend);
+    const divisorValue = Math.max(1, parseInt(divisor));
+    const difficulty = determineDifficulty(dividendValue, divisorValue);
 
     return (
       <CompletionCelebration
@@ -105,15 +104,15 @@ export default function GuidedMode({ user }: GuidedModeProps) {
     );
   }
 
-  if (started && num1 && num2) {
-    const n1 = parseInt(num1);
-    const n2 = parseInt(num2);
-    const difficulty = determineDifficulty(n1, n2);
+  if (started && dividend && divisor) {
+    const dividendValue = parseInt(dividend);
+    const divisorValue = Math.max(1, parseInt(divisor));
+    const difficulty = determineDifficulty(dividendValue, divisorValue);
 
     return (
-      <GuidedExercise
-        num1={n1}
-        num2={n2}
+      <DivisionExercise
+        dividend={dividendValue}
+        divisor={divisorValue}
         difficulty={difficulty}
         onComplete={handleComplete}
         onReset={handleReset}
@@ -125,10 +124,10 @@ export default function GuidedMode({ user }: GuidedModeProps) {
     <div className="flex flex-col items-center gap-6 p-6 max-w-2xl mx-auto">
       <div className="text-center mb-4">
         <h1 className="text-3xl sm:text-4xl font-bold text-slate-800 mb-2">
-          Esercizi Guidati
+          Divisioni Guidate
         </h1>
         <p className="text-lg text-slate-600">
-          Inserisci due numeri e ti guiderò passo dopo passo!
+          Inserisci dividendo e divisore e risolviamo la divisione passo dopo passo!
         </p>
       </div>
 
@@ -136,60 +135,60 @@ export default function GuidedMode({ user }: GuidedModeProps) {
         <CardContent className="p-6 sm:p-8">
           <div className="flex flex-col gap-6">
             <div className="space-y-2">
-              <Label htmlFor="num1" className="text-lg font-semibold">
-                Primo numero (moltiplicando)
+              <Label htmlFor="dividend" className="text-lg font-semibold">
+                Dividendo
               </Label>
               <Input
-                id="num1"
+                id="dividend"
                 type="number"
                 inputMode="numeric"
-                value={num1}
-                onChange={(e) => setNum1(e.target.value)}
-                placeholder="Es: 147"
+                value={dividend}
+                onChange={(e) => setDividend(e.target.value)}
+                placeholder="Es: 784"
                 className="text-2xl h-14 text-center font-mono"
-                data-testid="input-num1"
+                data-testid="input-dividend"
               />
             </div>
 
             <div className="flex justify-center">
               <div className="w-12 h-12 rounded-full bg-sky-500/10 flex items-center justify-center">
-                <span className="text-2xl text-sky-600 font-bold">×</span>
+                <DivideSquare className="w-5 h-5 text-sky-600" />
               </div>
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="num2" className="text-lg font-semibold">
-                Secondo numero (moltiplicatore)
+              <Label htmlFor="divisor" className="text-lg font-semibold">
+                Divisore
               </Label>
               <Input
-                id="num2"
+                id="divisor"
                 type="number"
                 inputMode="numeric"
-                value={num2}
-                onChange={(e) => setNum2(e.target.value)}
-                placeholder="Es: 25"
+                min={1}
+                value={divisor}
+                onChange={(e) => setDivisor(e.target.value)}
+                placeholder="Es: 24"
                 className="text-2xl h-14 text-center font-mono"
-                data-testid="input-num2"
+                data-testid="input-divisor"
               />
             </div>
 
             <Button
               onClick={handleStart}
-              disabled={!num1 || !num2}
+              disabled={!dividend || !divisor}
               size="lg"
               className="w-full mt-4"
-              data-testid="button-start-guided"
+              data-testid="button-start-guided-division"
             >
-              <Calculator className="w-5 h-5 mr-2" />
-              Inizia Esercizio
+              <DivideSquare className="w-5 h-5 mr-2" />
+              Inizia Divisione
             </Button>
           </div>
         </CardContent>
       </Card>
 
       <div className="text-sm text-slate-600 text-center max-w-md">
-        Ti guiderò attraverso ogni passaggio della moltiplicazione in colonna,
-        aiutandoti a calcolare i riporti e i prodotti parziali!
+        Ti guiderò attraverso ogni passaggio della divisione in colonna, tra quoziente, sottrazioni e resti!
       </div>
     </div>
   );
