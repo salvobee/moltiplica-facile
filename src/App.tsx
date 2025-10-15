@@ -6,13 +6,15 @@ import { Toaster } from "@/components/ui/toaster";
 import { AuthButton } from "@/components/AuthButton";
 import { getAuthClient } from "@/lib/firebase";
 import type { User as FirebaseUser } from "firebase/auth";
-import { Calculator, Dices, BarChart3, Download } from "lucide-react";
+import { Calculator, Dices, BarChart3, Download, DivideSquare, DivideCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useInstallPrompt } from "@/hooks/useInstallPrompt";
 import { toast } from "@/hooks/use-toast";
 
 const GuidedMode = lazy(() => import("@/pages/GuidedMode"));
 const RandomMode = lazy(() => import("@/pages/RandomMode"));
+const DivisionGuidedMode = lazy(() => import("@/pages/DivisionGuidedMode"));
+const DivisionRandomMode = lazy(() => import("@/pages/DivisionRandomMode"));
 const StatsPage = lazy(() => import("@/pages/StatsPage"));
 
 function Router({ user }: { user: FirebaseUser | null }) {
@@ -23,6 +25,12 @@ function Router({ user }: { user: FirebaseUser | null }) {
       </Route>
       <Route path="/random">
         {() => <RandomMode user={user} />}
+      </Route>
+      <Route path="/division">
+        {() => <DivisionGuidedMode user={user} />}
+      </Route>
+      <Route path="/division/random">
+        {() => <DivisionRandomMode user={user} />}
       </Route>
       <Route path="/stats">
         {() => <StatsPage user={user} />}
@@ -130,8 +138,10 @@ function App() {
   }, []);
 
   const navItems = [
-    { path: "/", label: "Esercizi Guidati", icon: Calculator, testId: "nav-guided" },
-    { path: "/random", label: "Esercizi a Caso", icon: Dices, testId: "nav-random" },
+    { path: "/", label: "Moltiplicazioni Guidate", icon: Calculator, testId: "nav-guided" },
+    { path: "/random", label: "Moltiplicazioni Casuali", icon: Dices, testId: "nav-random" },
+    { path: "/division", label: "Divisioni Guidate", icon: DivideSquare, testId: "nav-division-guided" },
+    { path: "/division/random", label: "Divisioni Casuali", icon: DivideCircle, testId: "nav-division-random" },
     { path: "/stats", label: "Punteggio", icon: BarChart3, testId: "nav-stats" },
   ];
 
@@ -147,7 +157,7 @@ function App() {
               </div>
               <div className="hidden sm:block">
                 <h1 className="text-lg font-bold text-slate-800 leading-tight">
-                  Moltiplicazioni
+                  Operazioni
                 </h1>
                 <p className="text-xs text-slate-500 leading-tight">
                   in Colonna

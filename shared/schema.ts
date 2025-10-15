@@ -3,12 +3,18 @@ import { z } from "zod";
 // Difficulty levels for exercises
 export type DifficultyLevel = 1 | 2 | 3 | 4;
 
+// Supported operations
+export type OperationType = 'multiplication' | 'division';
+
 // Step types in the multiplication process
-export type StepType = 
+export type StepType =
   | 'multiply' // Multiplying a single digit
   | 'carry' // Entering a carry value
   | 'partial' // Partial product digit
   | 'sum'; // Final sum step
+
+// Step types in the division process
+export type DivisionStepType = 'quotient' | 'remainder';
 
 // Exercise data structure
 export const exerciseSchema = z.object({
@@ -17,6 +23,7 @@ export const exerciseSchema = z.object({
   num2: z.number().int().positive(),
   difficulty: z.union([z.literal(1), z.literal(2), z.literal(3), z.literal(4)]),
   mode: z.enum(['guided', 'random']),
+  operation: z.enum(['multiplication', 'division']).default('multiplication'),
   startedAt: z.number(), // timestamp
   completedAt: z.number().optional(),
   score: z.number().int().min(0).optional(),
@@ -79,6 +86,33 @@ export interface MultiplicationState {
   finalResultDigits: number[];
 }
 
+export interface DivisionSubtractionStep {
+  quotientDigit: number;
+  partialDividend: number;
+  product: number;
+  remainder: number;
+  broughtDownDigit: number | null;
+  resultAfterBringDown: number | null;
+}
+
+export interface DivisionState {
+  dividend: number;
+  divisor: number;
+  dividendDigits: number[];
+  quotientDigits: (number | null)[];
+  currentDigitIndex: number;
+  currentQuotientIndex: number;
+  currentPartialDividend: number;
+  remainder: number;
+  pendingQuotientDigit: number | null;
+  pendingProduct: number | null;
+  subtractionSteps: DivisionSubtractionStep[];
+  hints: number;
+  errors: number;
+  isComplete: boolean;
+  phase: 'quotient' | 'remainder' | 'complete';
+}
+
 // Step validation result
 export interface StepValidation {
   isCorrect: boolean;
@@ -89,6 +123,15 @@ export interface StepValidation {
   hintMessage?: string;
   expectedCarry?: number;
   expectedDigit?: number;
+}
+
+export interface DivisionStepValidation {
+  isCorrect: boolean;
+  expectedValue: number;
+  actualValue: number | null;
+  stepType: DivisionStepType;
+  expectedQuotient?: number;
+  expectedProduct?: number;
 }
 
 // Firebase user data structure

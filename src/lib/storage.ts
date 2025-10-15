@@ -33,7 +33,11 @@ export function updateGuestStats(stats: UserStats): void {
 export function getGuestExercises(): Exercise[] {
   const stored = localStorage.getItem(STORAGE_KEYS.GUEST_EXERCISES);
   if (!stored) return [];
-  return JSON.parse(stored);
+  const parsed = JSON.parse(stored) as Exercise[];
+  return parsed.map((exercise) => ({
+    ...exercise,
+    operation: exercise.operation ?? 'multiplication',
+  }));
 }
 
 export function addGuestExercise(exercise: Exercise): void {
@@ -52,7 +56,8 @@ export function clearGuestData(): void {
 export function getCurrentExercise(): Exercise | null {
   const stored = localStorage.getItem(STORAGE_KEYS.CURRENT_EXERCISE);
   if (!stored) return null;
-  return JSON.parse(stored);
+  const exercise = JSON.parse(stored) as Exercise;
+  return { ...exercise, operation: exercise.operation ?? 'multiplication' };
 }
 
 export function saveCurrentExercise(exercise: Exercise | null): void {

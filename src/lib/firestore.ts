@@ -142,6 +142,7 @@ export async function getUserExercises(userId: string, limitCount: number = 50):
       num2: data.num2,
       difficulty: data.difficulty,
       mode: data.mode,
+      operation: data.operation ?? 'multiplication',
       startedAt: data.startedAt,
       completedAt: data.completedAt,
       score: data.score,
