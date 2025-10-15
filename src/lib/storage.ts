@@ -1,44 +1,74 @@
-import { STORAGE_KEYS, type UserStats, type Exercise } from "@shared/schema";
+import {
+  STORAGE_KEYS,
+  type UserStats,
+  type Exercise,
+  userStatsSchema,
+  exerciseSchema,
+  createDefaultUserStats,
+} from "@shared/schema";
+
+function normalizeStats(stats: unknown): UserStats {
+  try {
+    return userStatsSchema.parse(stats);
+  } catch (error) {
+    console.warn("Unable to parse stored stats, resetting to defaults", error);
+    return createDefaultUserStats();
+  }
+}
+
+function normalizeExercise(data: unknown): Exercise | null {
+  try {
+    return exerciseSchema.parse(data);
+  } catch (error) {
+    console.warn("Unable to parse stored exercise, skipping", error);
+    return null;
+  }
+}
 
 export function getGuestStats(): UserStats {
   const stored = localStorage.getItem(STORAGE_KEYS.GUEST_STATS);
   if (!stored) {
-    const defaultStats: UserStats = {
-      totalExercises: 0,
-      totalScore: 0,
-      exercisesByDifficulty: { 1: 0, 2: 0, 3: 0, 4: 0 },
-      lastUpdated: Date.now(),
-    };
-    return defaultStats;
+    return createDefaultUserStats();
   }
-  const parsed = JSON.parse(stored) as UserStats;
-  return {
-    ...parsed,
-    exercisesByDifficulty: {
-      1: parsed.exercisesByDifficulty?.[1] ?? 0,
-      2: parsed.exercisesByDifficulty?.[2] ?? 0,
-      3: parsed.exercisesByDifficulty?.[3] ?? 0,
-      4: parsed.exercisesByDifficulty?.[4] ?? 0,
-    },
-  };
+  const parsed = JSON.parse(stored);
+  return normalizeStats(parsed);
 }
 
 export function updateGuestStats(stats: UserStats): void {
-  localStorage.setItem(STORAGE_KEYS.GUEST_STATS, JSON.stringify({
-    ...stats,
+  const normalized = normalizeStats(stats);
+  const statsToStore: UserStats = {
+    ...normalized,
+    exercisesByOperation: {
+      multiplication: {
+        ...normalized.exercisesByOperation.multiplication,
+      },
+      division: {
+        ...normalized.exercisesByOperation.division,
+      },
+    },
+    exercisesByDifficulty: { ...normalized.exercisesByDifficulty },
     lastUpdated: Date.now(),
-  }));
+  };
+
+  localStorage.setItem(STORAGE_KEYS.GUEST_STATS, JSON.stringify(statsToStore));
 }
 
 export function getGuestExercises(): Exercise[] {
   const stored = localStorage.getItem(STORAGE_KEYS.GUEST_EXERCISES);
   if (!stored) return [];
-  return JSON.parse(stored);
+  const parsed = JSON.parse(stored) as unknown[];
+  return parsed
+    .map((item) => normalizeExercise(item))
+    .filter((exercise): exercise is Exercise => exercise !== null);
 }
 
 export function addGuestExercise(exercise: Exercise): void {
   const exercises = getGuestExercises();
-  exercises.push(exercise);
+  const normalizedExercise = normalizeExercise(exercise) ?? exercise;
+  exercises.push({
+    ...normalizedExercise,
+    operation: normalizedExercise.operation ?? 'multiplication',
+  });
   // Keep only last 50 exercises
   const trimmed = exercises.slice(-50);
   localStorage.setItem(STORAGE_KEYS.GUEST_EXERCISES, JSON.stringify(trimmed));
@@ -52,12 +82,13 @@ export function clearGuestData(): void {
 export function getCurrentExercise(): Exercise | null {
   const stored = localStorage.getItem(STORAGE_KEYS.CURRENT_EXERCISE);
   if (!stored) return null;
-  return JSON.parse(stored);
+  return normalizeExercise(JSON.parse(stored));
 }
 
 export function saveCurrentExercise(exercise: Exercise | null): void {
   if (exercise) {
-    localStorage.setItem(STORAGE_KEYS.CURRENT_EXERCISE, JSON.stringify(exercise));
+    const normalized = normalizeExercise(exercise) ?? exercise;
+    localStorage.setItem(STORAGE_KEYS.CURRENT_EXERCISE, JSON.stringify(normalized));
   } else {
     localStorage.removeItem(STORAGE_KEYS.CURRENT_EXERCISE);
   }

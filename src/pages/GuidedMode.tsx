@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { GuidedExercise } from "@/components/GuidedExercise";
 import { CompletionCelebration } from "@/components/CompletionCelebration";
-import type { DifficultyLevel, Exercise } from "@shared/schema";
+import type { DifficultyLevel, Exercise, OperationType } from "@shared/schema";
 import { Calculator } from "lucide-react";
 import type { User as FirebaseUser } from "firebase/auth";
 
@@ -50,12 +50,14 @@ export default function GuidedMode({ user }: GuidedModeProps) {
     const n2 = parseInt(num2);
     const difficulty = determineDifficulty(n1, n2);
 
+    const operation: OperationType = 'multiplication';
     const exercise: Exercise = {
       id: Date.now().toString(),
       num1: n1,
       num2: n2,
       difficulty,
       mode: 'guided',
+      operation,
       startedAt: Date.now() - 60000,
       completedAt: Date.now(),
       score,
@@ -70,6 +72,7 @@ export default function GuidedMode({ user }: GuidedModeProps) {
       const stats = getGuestStats();
       stats.totalExercises++;
       stats.totalScore += score;
+      stats.exercisesByOperation[operation][difficulty]++;
       stats.exercisesByDifficulty[difficulty]++;
       updateGuestStats(stats);
       addGuestExercise(exercise);

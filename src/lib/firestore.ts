@@ -1,5 +1,12 @@
 import type { Timestamp } from "firebase/firestore";
-import type { UserStats, Exercise, LeaderboardEntry } from "@shared/schema";
+import {
+  userStatsSchema,
+  exerciseSchema,
+  sumDifficultyCounts,
+  type UserStats,
+  type Exercise,
+  type LeaderboardEntry,
+} from "@shared/schema";
 import { getFirestoreClient } from "./firebase";
 
 type FirestoreModule = typeof import("firebase/firestore");
@@ -25,8 +32,15 @@ export async function saveUserStats(userId: string, stats: UserStats): Promise<v
   ]);
   const userRef = doc(db, USERS_COLLECTION, userId);
 
-  await setDoc(userRef, {
+  const normalizedStats = userStatsSchema.parse({
     ...stats,
+    userId,
+  });
+
+  const { lastUpdated: _ignored, ...rest } = normalizedStats;
+
+  await setDoc(userRef, {
+    ...rest,
     userId,
     lastUpdated: serverTimestamp(),
   }, { merge: true });
@@ -46,19 +60,17 @@ export async function getUserStats(userId: string): Promise<UserStats | null> {
   }
   
   const data = userSnap.data();
-  const difficultyCounts = data.exercisesByDifficulty || { 1: 0, 2: 0, 3: 0, 4: 0 };
-  return {
+  const lastUpdatedValue = (data.lastUpdated as Timestamp | number | undefined);
+  const normalized = userStatsSchema.parse({
+    ...data,
     userId,
-    totalExercises: data.totalExercises || 0,
-    totalScore: data.totalScore || 0,
-    exercisesByDifficulty: {
-      1: difficultyCounts[1] || 0,
-      2: difficultyCounts[2] || 0,
-      3: difficultyCounts[3] || 0,
-      4: difficultyCounts[4] || 0,
-    },
-    lastUpdated: (data.lastUpdated as Timestamp)?.toMillis() || Date.now(),
-  };
+    lastUpdated:
+      typeof lastUpdatedValue === 'number'
+        ? lastUpdatedValue
+        : lastUpdatedValue?.toMillis() ?? Date.now(),
+  });
+
+  return normalized;
 }
 
 // Save exercise
@@ -67,54 +79,31 @@ export async function saveExercise(userId: string, exercise: Exercise): Promise<
     getFirestoreClient(),
     loadFirestoreModule(),
   ]);
-  const { doc, setDoc, serverTimestamp, getDoc, updateDoc, increment } = firestore;
+  const { doc, setDoc, serverTimestamp, increment } = firestore;
   const exerciseRef = doc(db, EXERCISES_COLLECTION, exercise.id);
 
+  const normalizedExercise = exerciseSchema.parse(exercise);
+
   await setDoc(exerciseRef, {
-    ...exercise,
+    ...normalizedExercise,
     userId,
     createdAt: serverTimestamp(),
   });
 
   // Update user stats atomically
   const userRef = doc(db, USERS_COLLECTION, userId);
-  const userSnap = await getDoc(userRef);
-  
-  if (!userSnap.exists()) {
-    // Create initial stats
-    await setDoc(userRef, {
-      userId,
-      totalExercises: 1,
-      totalScore: exercise.score || 0,
-      exercisesByDifficulty: {
-        1: exercise.difficulty === 1 ? 1 : 0,
-        2: exercise.difficulty === 2 ? 1 : 0,
-        3: exercise.difficulty === 3 ? 1 : 0,
-        4: exercise.difficulty === 4 ? 1 : 0,
-      },
-      lastUpdated: serverTimestamp(),
-    });
-  } else {
-    // Update stats
-    const currentStats = userSnap.data();
-    const currentDifficultyCounts = {
-      1: currentStats.exercisesByDifficulty?.[1] || 0,
-      2: currentStats.exercisesByDifficulty?.[2] || 0,
-      3: currentStats.exercisesByDifficulty?.[3] || 0,
-      4: currentStats.exercisesByDifficulty?.[4] || 0,
-    };
-    const newDifficultyCount = {
-      ...currentDifficultyCounts,
-      [exercise.difficulty]: (currentDifficultyCounts[exercise.difficulty] || 0) + 1,
-    };
-    
-    await updateDoc(userRef, {
-      totalExercises: increment(1),
-      totalScore: increment(exercise.score || 0),
-      exercisesByDifficulty: newDifficultyCount,
-      lastUpdated: serverTimestamp(),
-    });
-  }
+  const operationKey = normalizedExercise.operation;
+  const difficultyKey = normalizedExercise.difficulty;
+  const scoreIncrement = normalizedExercise.score ?? 0;
+
+  await setDoc(userRef, {
+    userId,
+    totalExercises: increment(1),
+    totalScore: increment(scoreIncrement),
+    [`exercisesByOperation.${operationKey}.${difficultyKey}`]: increment(1),
+    [`exercisesByDifficulty.${difficultyKey}`]: increment(1),
+    lastUpdated: serverTimestamp(),
+  }, { merge: true });
 }
 
 // Get user exercises
@@ -142,6 +131,7 @@ export async function getUserExercises(userId: string, limitCount: number = 50):
       num2: data.num2,
       difficulty: data.difficulty,
       mode: data.mode,
+      operation: data.operation ?? 'multiplication',
       startedAt: data.startedAt,
       completedAt: data.completedAt,
       score: data.score,
@@ -218,17 +208,27 @@ export async function syncLocalDataToCloud(userId: string, localStats: UserStats
       userId,
       totalExercises: cloudStats.totalExercises + localStats.totalExercises,
       totalScore: cloudStats.totalScore + localStats.totalScore,
-      exercisesByDifficulty: {
-        1: cloudStats.exercisesByDifficulty[1] + localStats.exercisesByDifficulty[1],
-        2: cloudStats.exercisesByDifficulty[2] + localStats.exercisesByDifficulty[2],
-        3: cloudStats.exercisesByDifficulty[3] + localStats.exercisesByDifficulty[3],
-        4: cloudStats.exercisesByDifficulty[4] + localStats.exercisesByDifficulty[4],
+      exercisesByOperation: {
+        multiplication: sumDifficultyCounts(
+          cloudStats.exercisesByOperation.multiplication,
+          localStats.exercisesByOperation.multiplication
+        ),
+        division: sumDifficultyCounts(
+          cloudStats.exercisesByOperation.division,
+          localStats.exercisesByOperation.division
+        ),
       },
+      exercisesByDifficulty: sumDifficultyCounts(
+        cloudStats.exercisesByOperation.multiplication,
+        cloudStats.exercisesByOperation.division,
+        localStats.exercisesByOperation.multiplication,
+        localStats.exercisesByOperation.division
+      ),
       lastUpdated: Date.now(),
     };
-    
+
     await saveUserStats(userId, mergedStats);
-    
+
     // Save new exercises
     for (const exercise of localExercises) {
       await saveExercise(userId, exercise);
