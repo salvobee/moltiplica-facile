@@ -42,7 +42,7 @@ function App() {
   const navItems = [
     { path: "/", label: "Esercizi Guidati", icon: Calculator, testId: "nav-guided" },
     { path: "/random", label: "Esercizi a Caso", icon: Dices, testId: "nav-random" },
-    { path: "/stats", label: "Statistiche", icon: BarChart3, testId: "nav-stats" },
+    { path: "/stats", label: "Punteggio", icon: BarChart3, testId: "nav-stats" },
   ];
 
   return (
