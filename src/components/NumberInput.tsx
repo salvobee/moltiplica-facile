@@ -1,4 +1,4 @@
-import { forwardRef, useState, useEffect } from "react";
+import { forwardRef, useState, useEffect, type ChangeEvent } from "react";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 
@@ -72,8 +72,8 @@ export const NumberInput = forwardRef<HTMLInputElement, NumberInputProps>(
     setLocalValue((prev) => (prev === nextValue ? prev : nextValue));
   }, [value]);
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const newValue = e.target.value;
+  const handleChange = (event: ChangeEvent<HTMLInputElement>) => {
+    const newValue = event.target.value;
 
     // Only allow numeric characters
     if (/^\d*$/.test(newValue)) {
@@ -98,10 +98,10 @@ export const NumberInput = forwardRef<HTMLInputElement, NumberInputProps>(
 
   const feedbackClasses =
     feedbackState === "correct"
-      ? "border-emerald-500 focus-visible:border-emerald-500 focus-visible:ring-emerald-200 ring-2 ring-emerald-200 bg-emerald-50 text-emerald-700"
+      ? "!border-emerald-500 focus-visible:!border-emerald-500 focus-visible:!ring-emerald-200 ring-2 ring-emerald-200 bg-emerald-50 text-emerald-700"
       : feedbackState === "error"
-      ? "border-rose-500 focus-visible:border-rose-500 focus-visible:ring-rose-200 ring-2 ring-rose-200 bg-rose-50 text-rose-700"
-      : "border-sky-400 focus-visible:border-sky-500 focus-visible:ring-sky-200";
+      ? "!border-rose-500 focus-visible:!border-rose-500 focus-visible:!ring-rose-200 ring-2 ring-rose-200 bg-rose-50 text-rose-700"
+      : "!border-sky-400 focus-visible:!border-sky-500 focus-visible:!ring-sky-200";
 
     return (
       <Input
