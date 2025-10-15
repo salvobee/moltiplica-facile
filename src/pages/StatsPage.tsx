@@ -108,7 +108,7 @@ export default function StatsPage({ user }: StatsPageProps) {
           <CardTitle className="text-xl">Esercizi per Difficoltà</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             <div className="flex flex-col items-center p-4 bg-slate-100 rounded-lg">
               <div className="text-2xl font-bold text-slate-800 mb-1" data-testid="text-difficulty-1">
                 {stats.exercisesByDifficulty[1]}
@@ -131,6 +131,14 @@ export default function StatsPage({ user }: StatsPageProps) {
               </div>
               <div className="text-sm text-slate-600">Difficile</div>
               <div className="text-xs text-slate-500 mt-1">3 cifre × 2 cifre</div>
+            </div>
+
+            <div className="flex flex-col items-center p-4 bg-slate-100 rounded-lg">
+              <div className="text-2xl font-bold text-slate-800 mb-1" data-testid="text-difficulty-4">
+                {stats.exercisesByDifficulty[4] ?? 0}
+              </div>
+              <div className="text-sm text-slate-600">Difficilissimo</div>
+              <div className="text-xs text-slate-500 mt-1">3 cifre × 3 cifre</div>
             </div>
           </div>
         </CardContent>

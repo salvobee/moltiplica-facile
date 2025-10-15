@@ -41,11 +41,17 @@ export async function getUserStats(userId: string): Promise<UserStats | null> {
   }
   
   const data = userSnap.data();
+  const difficultyCounts = data.exercisesByDifficulty || { 1: 0, 2: 0, 3: 0, 4: 0 };
   return {
     userId,
     totalExercises: data.totalExercises || 0,
     totalScore: data.totalScore || 0,
-    exercisesByDifficulty: data.exercisesByDifficulty || { 1: 0, 2: 0, 3: 0 },
+    exercisesByDifficulty: {
+      1: difficultyCounts[1] || 0,
+      2: difficultyCounts[2] || 0,
+      3: difficultyCounts[3] || 0,
+      4: difficultyCounts[4] || 0,
+    },
     lastUpdated: (data.lastUpdated as Timestamp)?.toMillis() || Date.now(),
   };
 }
@@ -74,16 +80,22 @@ export async function saveExercise(userId: string, exercise: Exercise): Promise<
         1: exercise.difficulty === 1 ? 1 : 0,
         2: exercise.difficulty === 2 ? 1 : 0,
         3: exercise.difficulty === 3 ? 1 : 0,
+        4: exercise.difficulty === 4 ? 1 : 0,
       },
       lastUpdated: serverTimestamp(),
     });
   } else {
     // Update stats
     const currentStats = userSnap.data();
-    const currentDifficultyCounts = currentStats.exercisesByDifficulty || { 1: 0, 2: 0, 3: 0 };
+    const currentDifficultyCounts = {
+      1: currentStats.exercisesByDifficulty?.[1] || 0,
+      2: currentStats.exercisesByDifficulty?.[2] || 0,
+      3: currentStats.exercisesByDifficulty?.[3] || 0,
+      4: currentStats.exercisesByDifficulty?.[4] || 0,
+    };
     const newDifficultyCount = {
-        ...currentDifficultyCounts,
-        [exercise.difficulty]: (currentDifficultyCounts[exercise.difficulty] || 0) + 1,
+      ...currentDifficultyCounts,
+      [exercise.difficulty]: (currentDifficultyCounts[exercise.difficulty] || 0) + 1,
     };
     
     await updateDoc(userRef, {
@@ -190,6 +202,7 @@ export async function syncLocalDataToCloud(userId: string, localStats: UserStats
         1: cloudStats.exercisesByDifficulty[1] + localStats.exercisesByDifficulty[1],
         2: cloudStats.exercisesByDifficulty[2] + localStats.exercisesByDifficulty[2],
         3: cloudStats.exercisesByDifficulty[3] + localStats.exercisesByDifficulty[3],
+        4: cloudStats.exercisesByDifficulty[4] + localStats.exercisesByDifficulty[4],
       },
       lastUpdated: Date.now(),
     };

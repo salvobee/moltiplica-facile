@@ -109,7 +109,15 @@ export function GuidedExercise({ num1, num2, difficulty, onComplete, onReset }: 
 
   const getInstructionText = (): ReactNode => {
     if (currentStepType === 'sum') {
-      const columnLabels = ['unità', 'decine', 'centinaia', 'migliaia'];
+      const columnLabels = [
+        'unità',
+        'decine',
+        'centinaia',
+        'migliaia',
+        'decine di migliaia',
+        'centinaia di migliaia',
+        'milioni',
+      ];
       const columnIndex = state.additionColumnIndex;
       const label = columnLabels[columnIndex] ?? `colonna ${columnIndex + 1}`;
       return (

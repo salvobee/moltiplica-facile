@@ -6,12 +6,21 @@ export function getGuestStats(): UserStats {
     const defaultStats: UserStats = {
       totalExercises: 0,
       totalScore: 0,
-      exercisesByDifficulty: { 1: 0, 2: 0, 3: 0 },
+      exercisesByDifficulty: { 1: 0, 2: 0, 3: 0, 4: 0 },
       lastUpdated: Date.now(),
     };
     return defaultStats;
   }
-  return JSON.parse(stored);
+  const parsed = JSON.parse(stored) as UserStats;
+  return {
+    ...parsed,
+    exercisesByDifficulty: {
+      1: parsed.exercisesByDifficulty?.[1] ?? 0,
+      2: parsed.exercisesByDifficulty?.[2] ?? 0,
+      3: parsed.exercisesByDifficulty?.[3] ?? 0,
+      4: parsed.exercisesByDifficulty?.[4] ?? 0,
+    },
+  };
 }
 
 export function updateGuestStats(stats: UserStats): void {

@@ -24,6 +24,16 @@ export default function GuidedMode({ user }: GuidedModeProps) {
   const [lastErrors, setLastErrors] = useState(0);
   const [lastHints, setLastHints] = useState(0);
 
+  const determineDifficulty = (n1: number, n2: number): DifficultyLevel => {
+    const digits1 = Math.max(String(Math.abs(n1)).length, 1);
+    const digits2 = Math.max(String(Math.abs(n2)).length, 1);
+
+    if (digits1 >= 3 && digits2 >= 3) return 4;
+    if ((digits1 >= 3 && digits2 >= 2) || (digits1 >= 2 && digits2 >= 3)) return 3;
+    if (digits1 >= 2 && digits2 >= 2) return 2;
+    return 1;
+  };
+
   const handleStart = () => {
     if (num1 && num2) {
       setStarted(true);
@@ -40,9 +50,7 @@ export default function GuidedMode({ user }: GuidedModeProps) {
     // Determine difficulty based on numbers
     const n1 = parseInt(num1);
     const n2 = parseInt(num2);
-    let difficulty: DifficultyLevel = 1;
-    if (n1 >= 100 || n2 >= 100) difficulty = 3;
-    else if (n1 >= 10 && n2 >= 10) difficulty = 2;
+    const difficulty = determineDifficulty(n1, n2);
 
     const exercise: Exercise = {
       id: Date.now().toString(),
@@ -85,9 +93,7 @@ export default function GuidedMode({ user }: GuidedModeProps) {
   if (showCelebration) {
     const n1 = parseInt(num1);
     const n2 = parseInt(num2);
-    let difficulty: DifficultyLevel = 1;
-    if (n1 >= 100 || n2 >= 100) difficulty = 3;
-    else if (n1 >= 10 && n2 >= 10) difficulty = 2;
+    const difficulty = determineDifficulty(n1, n2);
 
     return (
       <CompletionCelebration
@@ -103,9 +109,7 @@ export default function GuidedMode({ user }: GuidedModeProps) {
   if (started && num1 && num2) {
     const n1 = parseInt(num1);
     const n2 = parseInt(num2);
-    let difficulty: DifficultyLevel = 1;
-    if (n1 >= 100 || n2 >= 100) difficulty = 3;
-    else if (n1 >= 10 && n2 >= 10) difficulty = 2;
+    const difficulty = determineDifficulty(n1, n2);
 
     return (
       <GuidedExercise
