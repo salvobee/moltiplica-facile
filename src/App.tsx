@@ -1,4 +1,4 @@
-import { useState, useEffect, lazy, Suspense } from "react";
+import { useState, useEffect, lazy, Suspense, useCallback, useMemo } from "react";
 import { Switch, Route, useLocation } from "wouter";
 import { queryClient } from "./lib/queryClient";
 import { QueryClientProvider } from "@tanstack/react-query";
@@ -6,8 +6,10 @@ import { Toaster } from "@/components/ui/toaster";
 import { AuthButton } from "@/components/AuthButton";
 import { getAuthClient } from "@/lib/firebase";
 import type { User as FirebaseUser } from "firebase/auth";
-import { Calculator, Dices, BarChart3 } from "lucide-react";
+import { Calculator, Dices, BarChart3, Download } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useInstallPrompt } from "@/hooks/useInstallPrompt";
+import { toast } from "@/hooks/use-toast";
 
 const GuidedMode = lazy(() => import("@/pages/GuidedMode"));
 const RandomMode = lazy(() => import("@/pages/RandomMode"));
@@ -32,6 +34,73 @@ function Router({ user }: { user: FirebaseUser | null }) {
 function App() {
   const [user, setUser] = useState<FirebaseUser | null>(null);
   const [location, setLocation] = useLocation();
+  const {
+    canInstall,
+    promptInstall,
+    userChoice,
+    shouldShowHint,
+    dismissHint,
+    isInstallButtonDisabled,
+  } = useInstallPrompt();
+
+  useEffect(() => {
+    if (!shouldShowHint) {
+      return;
+    }
+
+    const { dismiss } = toast({
+      title: "Installa l'app",
+      description: "Aggiungila alla schermata principale per un accesso rapido.",
+      duration: 6000,
+    });
+
+    dismissHint();
+
+    return () => {
+      dismiss();
+    };
+  }, [shouldShowHint, dismissHint]);
+
+  const handlePromptInstall = useCallback(async () => {
+    const result = await promptInstall();
+
+    if (!result) {
+      return;
+    }
+
+    const accepted = result.outcome === "accepted";
+
+    toast({
+      title: accepted ? "Installazione avviata" : "Installazione annullata",
+      description: accepted
+        ? "Troverai l'app nella schermata principale del tuo dispositivo."
+        : "Puoi riprovare a installare l'app in un secondo momento.",
+      variant: accepted ? "success" : "default",
+      duration: 6000,
+    });
+
+    console.info("[PWA] Install prompt outcome", result);
+  }, [promptInstall]);
+
+  const showInstallButton = useMemo(() => {
+    if (canInstall) {
+      return true;
+    }
+
+    if (userChoice && userChoice.outcome !== "accepted") {
+      return true;
+    }
+
+    return false;
+  }, [canInstall, userChoice]);
+
+  const installButtonDisabled = useMemo(() => {
+    if (!canInstall && userChoice && userChoice.outcome !== "accepted") {
+      return true;
+    }
+
+    return isInstallButtonDisabled;
+  }, [canInstall, userChoice, isInstallButtonDisabled]);
 
   useEffect(() => {
     let isMounted = true;
@@ -86,7 +155,21 @@ function App() {
               </div>
             </div>
 
-            <AuthButton user={user} onAuthChange={setUser} />
+            <div className="flex items-center gap-2">
+              {showInstallButton && (
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={handlePromptInstall}
+                  disabled={installButtonDisabled}
+                  className="gap-2"
+                >
+                  <Download className="w-4 h-4" />
+                  <span>Installa l'app</span>
+                </Button>
+              )}
+              <AuthButton user={user} onAuthChange={setUser} />
+            </div>
           </div>
         </header>
 
