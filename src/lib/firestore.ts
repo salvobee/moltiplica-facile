@@ -1,20 +1,17 @@
-import { 
-  collection, 
-  doc, 
-  setDoc, 
-  getDoc, 
-  getDocs,
-  query,
-  where,
-  orderBy,
-  limit,
-  updateDoc,
-  increment,
-  serverTimestamp,
-  type Timestamp
-} from "firebase/firestore";
-import { db } from "./firebase";
+import type { Timestamp } from "firebase/firestore";
 import type { UserStats, Exercise, LeaderboardEntry } from "@shared/schema";
+import { getFirestoreClient } from "./firebase";
+
+type FirestoreModule = typeof import("firebase/firestore");
+
+let firestoreModulePromise: Promise<FirestoreModule> | null = null;
+
+async function loadFirestoreModule(): Promise<FirestoreModule> {
+  if (!firestoreModulePromise) {
+    firestoreModulePromise = import("firebase/firestore");
+  }
+  return firestoreModulePromise;
+}
 
 // User stats collection
 const USERS_COLLECTION = "users";
@@ -22,8 +19,12 @@ const EXERCISES_COLLECTION = "exercises";
 
 // Save or update user stats
 export async function saveUserStats(userId: string, stats: UserStats): Promise<void> {
+  const [db, { doc, setDoc, serverTimestamp }] = await Promise.all([
+    getFirestoreClient(),
+    loadFirestoreModule(),
+  ]);
   const userRef = doc(db, USERS_COLLECTION, userId);
-  
+
   await setDoc(userRef, {
     ...stats,
     userId,
@@ -33,6 +34,10 @@ export async function saveUserStats(userId: string, stats: UserStats): Promise<v
 
 // Get user stats
 export async function getUserStats(userId: string): Promise<UserStats | null> {
+  const [db, { doc, getDoc }] = await Promise.all([
+    getFirestoreClient(),
+    loadFirestoreModule(),
+  ]);
   const userRef = doc(db, USERS_COLLECTION, userId);
   const userSnap = await getDoc(userRef);
   
@@ -58,8 +63,13 @@ export async function getUserStats(userId: string): Promise<UserStats | null> {
 
 // Save exercise
 export async function saveExercise(userId: string, exercise: Exercise): Promise<void> {
+  const [db, firestore] = await Promise.all([
+    getFirestoreClient(),
+    loadFirestoreModule(),
+  ]);
+  const { doc, setDoc, serverTimestamp, getDoc, updateDoc, increment } = firestore;
   const exerciseRef = doc(db, EXERCISES_COLLECTION, exercise.id);
-  
+
   await setDoc(exerciseRef, {
     ...exercise,
     userId,
@@ -109,13 +119,18 @@ export async function saveExercise(userId: string, exercise: Exercise): Promise<
 
 // Get user exercises
 export async function getUserExercises(userId: string, limitCount: number = 50): Promise<Exercise[]> {
+  const [db, firestore] = await Promise.all([
+    getFirestoreClient(),
+    loadFirestoreModule(),
+  ]);
+  const { collection, query, where, orderBy, limit, getDocs } = firestore;
   const q = query(
     collection(db, EXERCISES_COLLECTION),
     where("userId", "==", userId),
     orderBy("createdAt", "desc"),
     limit(limitCount)
   );
-  
+
   const querySnapshot = await getDocs(q);
   const exercises: Exercise[] = [];
   
@@ -139,6 +154,11 @@ export async function getUserExercises(userId: string, limitCount: number = 50):
 
 // Get leaderboard (top users by score)
 export async function getLeaderboard(limitCount: number = 20, classCode?: string): Promise<LeaderboardEntry[]> {
+  const [db, firestore] = await Promise.all([
+    getFirestoreClient(),
+    loadFirestoreModule(),
+  ]);
+  const { collection, query, where, orderBy, limit, getDocs } = firestore;
   let q = query(
     collection(db, USERS_COLLECTION),
     orderBy("totalScore", "desc"),
@@ -218,11 +238,15 @@ export async function syncLocalDataToCloud(userId: string, localStats: UserStats
 
 // Update user profile info
 export async function updateUserProfile(
-  userId: string, 
-  displayName: string, 
-  photoURL?: string, 
+  userId: string,
+  displayName: string,
+  photoURL?: string,
   classCode?: string
 ): Promise<void> {
+  const [db, { doc, setDoc, serverTimestamp }] = await Promise.all([
+    getFirestoreClient(),
+    loadFirestoreModule(),
+  ]);
   const userRef = doc(db, USERS_COLLECTION, userId);
 
   await setDoc(userRef, {

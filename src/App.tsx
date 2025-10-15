@@ -1,16 +1,17 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, lazy, Suspense } from "react";
 import { Switch, Route, useLocation } from "wouter";
 import { queryClient } from "./lib/queryClient";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { AuthButton } from "@/components/AuthButton";
-import { onAuthStateChanged, type User as FirebaseUser } from "firebase/auth";
-import { auth } from "@/lib/firebase";
-import GuidedMode from "@/pages/GuidedMode";
-import RandomMode from "@/pages/RandomMode";
-import StatsPage from "@/pages/StatsPage";
+import { getAuthClient } from "@/lib/firebase";
+import type { User as FirebaseUser } from "firebase/auth";
 import { Calculator, Dices, BarChart3 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+
+const GuidedMode = lazy(() => import("@/pages/GuidedMode"));
+const RandomMode = lazy(() => import("@/pages/RandomMode"));
+const StatsPage = lazy(() => import("@/pages/StatsPage"));
 
 function Router({ user }: { user: FirebaseUser | null }) {
   return (
@@ -33,10 +34,30 @@ function App() {
   const [location, setLocation] = useLocation();
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (user) => {
-      setUser(user);
-    });
-    return () => unsubscribe();
+    let isMounted = true;
+    let unsubscribe: (() => void) | undefined;
+
+    (async () => {
+      try {
+        const [authClient, { onAuthStateChanged }] = await Promise.all([
+          getAuthClient(),
+          import("firebase/auth"),
+        ]);
+
+        unsubscribe = onAuthStateChanged(authClient, (firebaseUser) => {
+          if (isMounted) {
+            setUser(firebaseUser);
+          }
+        });
+      } catch (error) {
+        console.error("Errore durante l'inizializzazione di Firebase Auth", error);
+      }
+    })();
+
+    return () => {
+      isMounted = false;
+      unsubscribe?.();
+    };
   }, []);
 
   const navItems = [
@@ -96,7 +117,9 @@ function App() {
 
         {/* Main Content */}
         <main className="flex-1 container mx-auto py-6">
-          <Router user={user} />
+          <Suspense fallback={<div className="text-center py-10 text-slate-500">Caricamento...</div>}>
+            <Router user={user} />
+          </Suspense>
         </main>
 
         {/* Footer */}

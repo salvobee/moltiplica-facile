@@ -2,8 +2,8 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { LogIn, LogOut, User } from "lucide-react";
-import { signInWithPopup, signOut, type User as FirebaseUser } from "firebase/auth";
-import { auth, googleProvider, appleProvider } from "@/lib/firebase";
+import type { User as FirebaseUser } from "firebase/auth";
+import { getAuthClient, getGoogleProvider, getAppleProvider } from "@/lib/firebase";
 import { useToast } from "@/hooks/use-toast";
 import { SiGoogle, SiApple } from "react-icons/si";
 
@@ -20,9 +20,14 @@ export function AuthButton({ user, onAuthChange }: AuthButtonProps) {
   const handleGoogleSignIn = async () => {
     setLoading(true);
     try {
-      const result = await signInWithPopup(auth, googleProvider);
+      const [authClient, { signInWithPopup }, provider] = await Promise.all([
+        getAuthClient(),
+        import("firebase/auth"),
+        getGoogleProvider(),
+      ]);
+      const result = await signInWithPopup(authClient, provider);
       onAuthChange(result.user);
-      
+
       // Sync local data to cloud
       const { getGuestStats, getGuestExercises, clearGuestData } = await import("@/lib/storage");
       const { syncLocalDataToCloud, updateUserProfile } = await import("@/lib/firestore");
@@ -65,7 +70,12 @@ export function AuthButton({ user, onAuthChange }: AuthButtonProps) {
   const handleAppleSignIn = async () => {
     setLoading(true);
     try {
-      const result = await signInWithPopup(auth, appleProvider);
+      const [authClient, { signInWithPopup }, provider] = await Promise.all([
+        getAuthClient(),
+        import("firebase/auth"),
+        getAppleProvider(),
+      ]);
+      const result = await signInWithPopup(authClient, provider);
       onAuthChange(result.user);
       
       // Sync local data to cloud
@@ -109,7 +119,11 @@ export function AuthButton({ user, onAuthChange }: AuthButtonProps) {
 
   const handleSignOut = async () => {
     try {
-      await signOut(auth);
+      const [authClient, { signOut }] = await Promise.all([
+        getAuthClient(),
+        import("firebase/auth"),
+      ]);
+      await signOut(authClient);
       onAuthChange(null);
       toast({
         title: "Disconnesso",
