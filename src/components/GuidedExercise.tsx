@@ -125,8 +125,7 @@ export function GuidedExercise({ num1, num2, difficulty, onComplete, onReset }: 
               aggiungendo il riporto di {state.currentCarry}
             </span>
           </>
-        )}
-        , scrivendo il risultato completo.
+        )}.
       </>
     );
   };

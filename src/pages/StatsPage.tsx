@@ -158,7 +158,7 @@ export default function StatsPage({ user }: StatsPageProps) {
           </CardHeader>
           <CardContent>
             <div className="text-center py-8 text-slate-600">
-              La classifica verrà implementata nella prossima versione con Cloud Functions
+              La classifica verrà implementata prossimamente...
             </div>
           </CardContent>
         </Card>
