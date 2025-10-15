@@ -6,11 +6,11 @@ import { generateRandomExercise } from "@/lib/multiplicationLogic";
 import type { DifficultyLevel, Exercise } from "@shared/schema";
 import type { User as FirebaseUser } from "firebase/auth";
 
-interface RandomModeProps {
+interface MultiplicationRandomModeProps {
   user?: FirebaseUser | null;
 }
 
-export default function RandomMode({ user }: RandomModeProps) {
+export default function MultiplicationRandomMode({ user }: MultiplicationRandomModeProps) {
   const [difficulty, setDifficulty] = useState<DifficultyLevel | null>(null);
   const [num1, setNum1] = useState(0);
   const [num2, setNum2] = useState(0);
@@ -40,7 +40,7 @@ export default function RandomMode({ user }: RandomModeProps) {
       num1,
       num2,
       difficulty: difficulty!,
-      mode: 'random',
+      mode: "random",
       startedAt: Date.now() - 60000,
       completedAt: Date.now(),
       score,
@@ -103,17 +103,17 @@ export default function RandomMode({ user }: RandomModeProps) {
     <div className="flex flex-col items-center gap-6 p-6">
       <div className="text-center mb-4">
         <h1 className="text-3xl sm:text-4xl font-bold text-slate-800 mb-2">
-          Esercizi a Caso
+          Moltiplicazioni casuali
         </h1>
         <p className="text-lg text-slate-600">
-          Scegli il livello di difficoltà e sfida te stesso!
+          Scegli un livello di difficoltà e affronta moltiplicazioni in colonna generate automaticamente.
         </p>
       </div>
 
       <DifficultySelector onSelect={handleDifficultySelect} />
 
       <div className="text-sm text-slate-600 text-center max-w-md mt-4">
-        Completa esercizi casuali per guadagnare punti e salire nella classifica!
+        Completa esercizi casuali per allenarti con moltiplicazioni sempre diverse e accumulare punti esperienza.
       </div>
     </div>
   );

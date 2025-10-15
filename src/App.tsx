@@ -6,26 +6,42 @@ import { Toaster } from "@/components/ui/toaster";
 import { AuthButton } from "@/components/AuthButton";
 import { getAuthClient } from "@/lib/firebase";
 import type { User as FirebaseUser } from "firebase/auth";
-import { Calculator, Dices, BarChart3, Download } from "lucide-react";
+import { BarChart3, Calculator, Dices, DivideSquare, Download, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useInstallPrompt } from "@/hooks/useInstallPrompt";
 import { toast } from "@/hooks/use-toast";
 
-const GuidedMode = lazy(() => import("@/pages/GuidedMode"));
-const RandomMode = lazy(() => import("@/pages/RandomMode"));
+const OperationSelector = lazy(() => import("@/pages/OperationSelector"));
+const MultiplicationGuidedMode = lazy(() => import("@/pages/MultiplicationGuidedMode"));
+const MultiplicationRandomMode = lazy(() => import("@/pages/MultiplicationRandomMode"));
+const DivisionGuidedMode = lazy(() => import("@/pages/DivisionGuidedMode"));
+const DivisionRandomMode = lazy(() => import("@/pages/DivisionRandomMode"));
 const StatsPage = lazy(() => import("@/pages/StatsPage"));
+const NotFoundPage = lazy(() => import("@/pages/not-found"));
 
 function Router({ user }: { user: FirebaseUser | null }) {
   return (
     <Switch>
       <Route path="/">
-        {() => <GuidedMode user={user} />}
+        {() => <OperationSelector />}
       </Route>
-      <Route path="/random">
-        {() => <RandomMode user={user} />}
+      <Route path="/multiplication/guided">
+        {() => <MultiplicationGuidedMode user={user} />}
+      </Route>
+      <Route path="/multiplication/random">
+        {() => <MultiplicationRandomMode user={user} />}
+      </Route>
+      <Route path="/division/guided">
+        {() => <DivisionGuidedMode user={user} />}
+      </Route>
+      <Route path="/division/random">
+        {() => <DivisionRandomMode user={user} />}
       </Route>
       <Route path="/stats">
         {() => <StatsPage user={user} />}
+      </Route>
+      <Route path="/:rest*">
+        {() => <NotFoundPage />}
       </Route>
     </Switch>
   );
@@ -130,10 +146,97 @@ function App() {
   }, []);
 
   const navItems = [
-    { path: "/", label: "Esercizi Guidati", icon: Calculator, testId: "nav-guided" },
-    { path: "/random", label: "Esercizi a Caso", icon: Dices, testId: "nav-random" },
-    { path: "/stats", label: "Punteggio", icon: BarChart3, testId: "nav-stats" },
+    {
+      path: "/",
+      label: "Operazioni",
+      shortLabel: "Hub",
+      icon: Sparkles,
+      testId: "nav-operations",
+    },
+    {
+      path: "/multiplication/guided",
+      label: "Moltiplicazioni guidate",
+      shortLabel: "Molt. G",
+      icon: Calculator,
+      testId: "nav-multiplication-guided",
+    },
+    {
+      path: "/multiplication/random",
+      label: "Moltiplicazioni casuali",
+      shortLabel: "Molt. C",
+      icon: Dices,
+      testId: "nav-multiplication-random",
+    },
+    {
+      path: "/division/guided",
+      label: "Divisioni guidate",
+      shortLabel: "Div. G",
+      icon: DivideSquare,
+      testId: "nav-division-guided",
+    },
+    {
+      path: "/division/random",
+      label: "Divisioni casuali",
+      shortLabel: "Div. C",
+      icon: DivideSquare,
+      testId: "nav-division-random",
+    },
+    { path: "/stats", label: "Statistiche", shortLabel: "Stats", icon: BarChart3, testId: "nav-stats" },
   ];
+
+  const headerInfo = useMemo(() => {
+    if (location.startsWith("/multiplication")) {
+      return {
+        title: "Moltiplicazioni",
+        subtitle: "in colonna",
+        icon: Calculator,
+        iconBg: "bg-sky-500",
+      };
+    }
+
+    if (location.startsWith("/division")) {
+      return {
+        title: "Divisioni",
+        subtitle: "in colonna",
+        icon: DivideSquare,
+        iconBg: "bg-amber-500",
+      };
+    }
+
+    if (location === "/stats") {
+      return {
+        title: "Operazioni in colonna",
+        subtitle: "Tieni traccia dei progressi",
+        icon: BarChart3,
+        iconBg: "bg-emerald-500",
+      };
+    }
+
+    return {
+      title: "Operazioni in colonna",
+      subtitle: "Scegli la modalità di allenamento",
+      icon: Sparkles,
+      iconBg: "bg-sky-500",
+    };
+  }, [location]);
+
+  const footerText = useMemo(() => {
+    if (location.startsWith("/multiplication")) {
+      return "Allena le moltiplicazioni in colonna con percorsi guidati e sfide casuali.";
+    }
+
+    if (location.startsWith("/division")) {
+      return "Le divisioni in colonna stanno arrivando: resta connesso per le novità!";
+    }
+
+    if (location === "/stats") {
+      return "Consulta i tuoi progressi complessivi sulle operazioni in colonna.";
+    }
+
+    return "Scegli l'operazione in colonna con cui vuoi allenarti oggi.";
+  }, [location]);
+
+  const HeaderIcon = headerInfo.icon;
 
   return (
     <QueryClientProvider client={queryClient}>
@@ -142,15 +245,15 @@ function App() {
         <header className="sticky top-0 z-50 bg-white border-b-2 border-slate-200 shadow-sm">
           <div className="container mx-auto px-4 py-3 flex items-center justify-between gap-4">
             <div className="flex items-center gap-2">
-              <div className="w-10 h-10 rounded-lg bg-sky-500 flex items-center justify-center">
-                <Calculator className="w-6 h-6 text-white" />
+              <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${headerInfo.iconBg}`}>
+                <HeaderIcon className="w-6 h-6 text-white" />
               </div>
               <div className="hidden sm:block">
                 <h1 className="text-lg font-bold text-slate-800 leading-tight">
-                  Moltiplicazioni
+                  {headerInfo.title}
                 </h1>
                 <p className="text-xs text-slate-500 leading-tight">
-                  in Colonna
+                  {headerInfo.subtitle}
                 </p>
               </div>
             </div>
@@ -190,7 +293,7 @@ function App() {
                   >
                     <Icon className="w-4 h-4" />
                     <span className="hidden sm:inline">{item.label}</span>
-                    <span className="sm:hidden text-xs">{item.label.split(' ')[0]}</span>
+                    <span className="sm:hidden text-xs">{item.shortLabel}</span>
                   </Button>
                 );
               })}
@@ -208,7 +311,7 @@ function App() {
         {/* Footer */}
         <footer className="bg-white border-t border-slate-200 py-4">
           <div className="container mx-auto px-4 text-center text-sm text-slate-500">
-            <p>Impara le moltiplicazioni in colonna divertendoti!</p>
+            <p>{footerText}</p>
           </div>
         </footer>
         <Toaster />
