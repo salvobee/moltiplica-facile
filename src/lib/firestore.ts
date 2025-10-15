@@ -80,9 +80,10 @@ export async function saveExercise(userId: string, exercise: Exercise): Promise<
   } else {
     // Update stats
     const currentStats = userSnap.data();
+    const currentDifficultyCounts = currentStats.exercisesByDifficulty || { 1: 0, 2: 0, 3: 0 };
     const newDifficultyCount = {
-      ...currentStats.exercisesByDifficulty,
-      [exercise.difficulty]: (currentStats.exercisesByDifficulty[exercise.difficulty] || 0) + 1,
+        ...currentDifficultyCounts,
+        [exercise.difficulty]: (currentDifficultyCounts[exercise.difficulty] || 0) + 1,
     };
     
     await updateDoc(userRef, {
@@ -210,11 +211,11 @@ export async function updateUserProfile(
   classCode?: string
 ): Promise<void> {
   const userRef = doc(db, USERS_COLLECTION, userId);
-  
+
   await setDoc(userRef, {
     displayName,
     photoURL,
-    classCode,
+    // classCode,
     lastUpdated: serverTimestamp(),
   }, { merge: true });
 }
