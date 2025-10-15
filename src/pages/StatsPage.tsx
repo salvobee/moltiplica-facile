@@ -3,22 +3,14 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Trophy, Calculator, Star, TrendingUp } from "lucide-react";
 import type { User as FirebaseUser } from "firebase/auth";
 import type { UserStats } from "@shared/schema";
+import { createDefaultUserStats, sumDifficultyCounts } from "@shared/schema";
 
 interface StatsPageProps {
   user: FirebaseUser | null;
 }
 
-function createEmptyStats(): UserStats {
-  return {
-    totalExercises: 0,
-    totalScore: 0,
-    exercisesByDifficulty: { 1: 0, 2: 0, 3: 0, 4: 0 },
-    lastUpdated: Date.now(),
-  };
-}
-
 export default function StatsPage({ user }: StatsPageProps) {
-  const [stats, setStats] = useState<UserStats>(() => createEmptyStats());
+  const [stats, setStats] = useState<UserStats>(() => createDefaultUserStats());
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
@@ -31,7 +23,7 @@ export default function StatsPage({ user }: StatsPageProps) {
           const { getUserStats } = await import("@/lib/firestore");
           const cloudStats = await getUserStats(user.uid);
           if (isMounted) {
-            setStats(cloudStats ?? createEmptyStats());
+            setStats(cloudStats ?? createDefaultUserStats());
           }
         } catch (error) {
           console.error("Impossibile caricare le statistiche dell'utente", error);
@@ -49,7 +41,7 @@ export default function StatsPage({ user }: StatsPageProps) {
         } catch (error) {
           console.error("Impossibile caricare le statistiche locali", error);
           if (isMounted) {
-            setStats(createEmptyStats());
+            setStats(createDefaultUserStats());
           }
         }
       }
@@ -65,6 +57,11 @@ export default function StatsPage({ user }: StatsPageProps) {
   const averageScore = stats.totalExercises > 0
     ? Math.round(stats.totalScore / stats.totalExercises)
     : 0;
+
+  const difficultyTotals = sumDifficultyCounts(
+    stats.exercisesByOperation.multiplication,
+    stats.exercisesByOperation.division
+  );
 
   if (loading) {
     return (
@@ -154,7 +151,7 @@ export default function StatsPage({ user }: StatsPageProps) {
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             <div className="flex flex-col items-center p-4 bg-slate-100 rounded-lg">
               <div className="text-2xl font-bold text-slate-800 mb-1" data-testid="text-difficulty-1">
-                {stats.exercisesByDifficulty[1]}
+                {difficultyTotals[1]}
               </div>
               <div className="text-sm text-slate-600">Facile</div>
               <div className="text-xs text-slate-500 mt-1">2 cifre × 1 cifra</div>
@@ -162,7 +159,7 @@ export default function StatsPage({ user }: StatsPageProps) {
 
             <div className="flex flex-col items-center p-4 bg-slate-100 rounded-lg">
               <div className="text-2xl font-bold text-slate-800 mb-1" data-testid="text-difficulty-2">
-                {stats.exercisesByDifficulty[2]}
+                {difficultyTotals[2]}
               </div>
               <div className="text-sm text-slate-600">Medio</div>
               <div className="text-xs text-slate-500 mt-1">2 cifre × 2 cifre</div>
@@ -170,7 +167,7 @@ export default function StatsPage({ user }: StatsPageProps) {
 
             <div className="flex flex-col items-center p-4 bg-slate-100 rounded-lg">
               <div className="text-2xl font-bold text-slate-800 mb-1" data-testid="text-difficulty-3">
-                {stats.exercisesByDifficulty[3]}
+                {difficultyTotals[3]}
               </div>
               <div className="text-sm text-slate-600">Difficile</div>
               <div className="text-xs text-slate-500 mt-1">3 cifre × 2 cifre</div>
@@ -178,7 +175,7 @@ export default function StatsPage({ user }: StatsPageProps) {
 
             <div className="flex flex-col items-center p-4 bg-slate-100 rounded-lg">
               <div className="text-2xl font-bold text-slate-800 mb-1" data-testid="text-difficulty-4">
-                {stats.exercisesByDifficulty[4] ?? 0}
+                {difficultyTotals[4] ?? 0}
               </div>
               <div className="text-sm text-slate-600">Difficilissimo</div>
               <div className="text-xs text-slate-500 mt-1">3 cifre × 3 cifre</div>

@@ -3,7 +3,7 @@ import { DifficultySelector } from "@/components/DifficultySelector";
 import { GuidedExercise } from "@/components/GuidedExercise";
 import { CompletionCelebration } from "@/components/CompletionCelebration";
 import { generateRandomExercise } from "@/lib/multiplicationLogic";
-import type { DifficultyLevel, Exercise } from "@shared/schema";
+import type { DifficultyLevel, Exercise, OperationType } from "@shared/schema";
 import type { User as FirebaseUser } from "firebase/auth";
 
 interface RandomModeProps {
@@ -35,12 +35,14 @@ export default function RandomMode({ user }: RandomModeProps) {
     setLastHints(hints);
     setShowCelebration(true);
 
+    const operation: OperationType = 'multiplication';
     const exercise: Exercise = {
       id: Date.now().toString(),
       num1,
       num2,
       difficulty: difficulty!,
       mode: 'random',
+      operation,
       startedAt: Date.now() - 60000,
       completedAt: Date.now(),
       score,
@@ -56,6 +58,7 @@ export default function RandomMode({ user }: RandomModeProps) {
       stats.totalExercises++;
       stats.totalScore += score;
       if (difficulty) {
+        stats.exercisesByOperation[operation][difficulty]++;
         stats.exercisesByDifficulty[difficulty]++;
       }
       updateGuestStats(stats);
