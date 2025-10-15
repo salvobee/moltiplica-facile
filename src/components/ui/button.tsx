@@ -4,15 +4,15 @@ import { cn } from "@/lib/utils";
 
 const VARIANTS = {
   default:
-    "bg-primary text-primary-foreground border border-primary-border hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40",
+    "bg-sky-500 text-white border border-sky-600 hover:bg-sky-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-300",
   secondary:
-    "bg-secondary text-secondary-foreground border border-secondary-border hover:bg-secondary/80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-secondary/40",
+    "bg-amber-200 text-amber-900 border border-amber-300 hover:bg-amber-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-200",
   outline:
-    "bg-transparent text-foreground border border-input hover:bg-muted/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40",
+    "bg-white text-slate-800 border border-slate-300 hover:bg-slate-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-200",
   destructive:
-    "bg-destructive text-destructive-foreground border border-destructive-border hover:bg-destructive/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-destructive/40",
+    "bg-rose-500 text-white border border-rose-600 hover:bg-rose-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rose-300",
   ghost:
-    "bg-transparent text-foreground hover:bg-muted/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/30",
+    "bg-transparent text-slate-700 hover:bg-slate-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-200",
 };
 
 const SIZES = {

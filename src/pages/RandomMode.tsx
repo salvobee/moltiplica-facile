@@ -104,17 +104,17 @@ export default function RandomMode({ user }: RandomModeProps) {
   return (
     <div className="flex flex-col items-center gap-6 p-6">
       <div className="text-center mb-4">
-        <h1 className="text-3xl sm:text-4xl font-bold text-foreground mb-2">
+        <h1 className="text-3xl sm:text-4xl font-bold text-slate-800 mb-2">
           Esercizi a Caso
         </h1>
-        <p className="text-lg text-muted-foreground">
+        <p className="text-lg text-slate-600">
           Scegli il livello di difficoltà e sfida te stesso!
         </p>
       </div>
 
       <DifficultySelector onSelect={handleDifficultySelect} />
 
-      <div className="text-sm text-muted-foreground text-center max-w-md mt-4">
+      <div className="text-sm text-slate-600 text-center max-w-md mt-4">
         Completa esercizi casuali per guadagnare punti e salire nella classifica!
       </div>
     </div>

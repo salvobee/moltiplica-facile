@@ -18,9 +18,9 @@ export function HintCard({ message, type, level }: HintCardProps) {
   const Icon = icons[type];
 
   const colorClasses = {
-    hint: 'border-accent bg-accent/10 text-accent-foreground',
-    error: 'border-destructive bg-destructive/10 text-destructive',
-    success: 'border-success bg-success/10 text-success',
+    hint: 'border-amber-300 bg-amber-100 text-amber-800',
+    error: 'border-rose-400 bg-rose-50 text-rose-600',
+    success: 'border-emerald-400 bg-emerald-50 text-emerald-700',
   };
 
   return (

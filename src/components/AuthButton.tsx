@@ -131,11 +131,11 @@ export function AuthButton({ user, onAuthChange }: AuthButtonProps) {
           {user.photoURL ? (
             <img src={user.photoURL} alt={user.displayName || 'User'} className="w-8 h-8 rounded-full" />
           ) : (
-            <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
-              <User className="w-5 h-5 text-primary" />
+            <div className="w-8 h-8 rounded-full bg-sky-500/10 flex items-center justify-center">
+              <User className="w-5 h-5 text-sky-600" />
             </div>
           )}
-          <span className="text-sm font-medium text-foreground">{user.displayName}</span>
+          <span className="text-sm font-medium text-slate-800">{user.displayName}</span>
         </div>
         <Button variant="outline" size="sm" onClick={handleSignOut} data-testid="button-logout">
           <LogOut className="w-4 h-4 sm:mr-2" />
@@ -187,7 +187,7 @@ export function AuthButton({ user, onAuthChange }: AuthButtonProps) {
             </Button>
           </div>
 
-          <p className="text-xs text-muted-foreground text-center mt-4">
+          <p className="text-xs text-slate-600 text-center mt-4">
             Continuando, i tuoi dati locali verranno sincronizzati nel cloud
           </p>
         </DialogContent>

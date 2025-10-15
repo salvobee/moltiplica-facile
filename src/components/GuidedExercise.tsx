@@ -104,7 +104,7 @@ export function GuidedExercise({ num1, num2, difficulty, onComplete, onReset }: 
           {state.additionCarry > 0 && (
             <>
               ,{' '}
-              <span className="text-destructive font-semibold">
+              <span className="text-rose-500 font-semibold">
                 aggiungendo il riporto di {state.additionCarry}
               </span>
             </>
@@ -121,7 +121,7 @@ export function GuidedExercise({ num1, num2, difficulty, onComplete, onReset }: 
         {state.currentCarry > 0 && (
           <>
             ,{' '}
-            <span className="text-destructive font-semibold">
+            <span className="text-rose-500 font-semibold">
               aggiungendo il riporto di {state.currentCarry}
             </span>
           </>
@@ -138,8 +138,8 @@ export function GuidedExercise({ num1, num2, difficulty, onComplete, onReset }: 
     return (
       <div className="flex flex-col items-center gap-6 p-6">
         <div className="text-center">
-          <h2 className="text-4xl sm:text-5xl font-bold text-success mb-4">Complimenti!</h2>
-          <p className="text-2xl sm:text-3xl font-mono font-bold text-foreground">
+          <h2 className="text-4xl sm:text-5xl font-bold text-emerald-600 mb-4">Complimenti!</h2>
+          <p className="text-2xl sm:text-3xl font-mono font-bold text-slate-800">
             {num1} × {num2} = {finalResult}
           </p>
         </div>
@@ -153,11 +153,11 @@ export function GuidedExercise({ num1, num2, difficulty, onComplete, onReset }: 
       {/* Stats Bar */}
       <div className="flex justify-between items-center gap-4 flex-wrap">
         <div className="flex gap-4">
-          <div className="text-sm font-medium text-muted-foreground">
-            Errori: <span className="text-destructive font-bold">{state.errors}</span>
+          <div className="text-sm font-medium text-slate-600">
+            Errori: <span className="text-rose-500 font-bold">{state.errors}</span>
           </div>
-          <div className="text-sm font-medium text-muted-foreground">
-            Suggerimenti: <span className="text-accent font-bold">{state.hints}</span>
+          <div className="text-sm font-medium text-slate-600">
+            Suggerimenti: <span className="text-amber-500 font-bold">{state.hints}</span>
           </div>
         </div>
         {onReset && (
@@ -172,9 +172,9 @@ export function GuidedExercise({ num1, num2, difficulty, onComplete, onReset }: 
       <MultiplicationDisplay state={state} showPartialProducts={true} />
 
       {/* Current Step Card */}
-      <Card className="border-2 border-primary">
+      <Card className="border-2 border-sky-400">
         <CardHeader className="pb-4">
-          <CardTitle className="text-lg sm:text-xl text-center text-primary font-bold">
+          <CardTitle className="text-lg sm:text-xl text-center text-sky-600 font-bold">
             {instructionText}
           </CardTitle>
         </CardHeader>

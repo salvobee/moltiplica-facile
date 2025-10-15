@@ -121,15 +121,15 @@ export default function GuidedMode({ user }: GuidedModeProps) {
   return (
     <div className="flex flex-col items-center gap-6 p-6 max-w-2xl mx-auto">
       <div className="text-center mb-4">
-        <h1 className="text-3xl sm:text-4xl font-bold text-foreground mb-2">
+        <h1 className="text-3xl sm:text-4xl font-bold text-slate-800 mb-2">
           Esercizi Guidati
         </h1>
-        <p className="text-lg text-muted-foreground">
+        <p className="text-lg text-slate-600">
           Inserisci due numeri e ti guiderò passo dopo passo!
         </p>
       </div>
 
-      <Card className="w-full border-2 border-card-border">
+      <Card className="w-full border-2 border-slate-300">
         <CardContent className="p-6 sm:p-8">
           <div className="flex flex-col gap-6">
             <div className="space-y-2">
@@ -149,8 +149,8 @@ export default function GuidedMode({ user }: GuidedModeProps) {
             </div>
 
             <div className="flex justify-center">
-              <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center">
-                <span className="text-2xl text-primary font-bold">×</span>
+              <div className="w-12 h-12 rounded-full bg-sky-500/10 flex items-center justify-center">
+                <span className="text-2xl text-sky-600 font-bold">×</span>
               </div>
             </div>
 
@@ -184,8 +184,8 @@ export default function GuidedMode({ user }: GuidedModeProps) {
         </CardContent>
       </Card>
 
-      <div className="text-sm text-muted-foreground text-center max-w-md">
-        Ti guiderò attraverso ogni passaggio della moltiplicazione in colonna, 
+      <div className="text-sm text-slate-600 text-center max-w-md">
+        Ti guiderò attraverso ogni passaggio della moltiplicazione in colonna,
         aiutandoti a calcolare i riporti e i prodotti parziali!
       </div>
     </div>
