@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { forwardRef, useState, useEffect, type ChangeEvent } from "react";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 
@@ -14,33 +14,52 @@ interface NumberInputProps {
   "data-testid"?: string;
 }
 
-export function NumberInput({ 
-  value, 
-  onChange, 
-  isCorrect, 
-  isError, 
-  size = 'md',
-  autoFocus,
-  placeholder = "",
-  disabled = false,
-  "data-testid": testId
-}: NumberInputProps) {
+export const NumberInput = forwardRef<HTMLInputElement, NumberInputProps>(
+  (
+    {
+      value,
+      onChange,
+      isCorrect,
+      isError,
+      size = 'md',
+      autoFocus,
+      placeholder = "",
+      disabled = false,
+      "data-testid": testId,
+    }: NumberInputProps,
+    ref,
+  ) => {
   const [localValue, setLocalValue] = useState(value?.toString() || '');
   const [shake, setShake] = useState(false);
   const [bounce, setBounce] = useState(false);
+  const [feedbackState, setFeedbackState] = useState<"correct" | "error" | null>(null);
 
   useEffect(() => {
-    if (isError) {
-      setShake(true);
-      setTimeout(() => setShake(false), 400);
-    }
+    if (!isError) return;
+
+    setShake(true);
+    setFeedbackState("error");
+    const timer = setTimeout(() => setFeedbackState(null), 1200);
+    const shakeTimer = setTimeout(() => setShake(false), 400);
+
+    return () => {
+      clearTimeout(timer);
+      clearTimeout(shakeTimer);
+    };
   }, [isError]);
 
   useEffect(() => {
-    if (isCorrect) {
-      setBounce(true);
-      setTimeout(() => setBounce(false), 500);
-    }
+    if (!isCorrect) return;
+
+    setBounce(true);
+    setFeedbackState("correct");
+    const timer = setTimeout(() => setFeedbackState(null), 1200);
+    const bounceTimer = setTimeout(() => setBounce(false), 500);
+
+    return () => {
+      clearTimeout(timer);
+      clearTimeout(bounceTimer);
+    };
   }, [isCorrect]);
 
   useEffect(() => {
@@ -53,8 +72,8 @@ export function NumberInput({
     setLocalValue((prev) => (prev === nextValue ? prev : nextValue));
   }, [value]);
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const newValue = e.target.value;
+  const handleChange = (event: ChangeEvent<HTMLInputElement>) => {
+    const newValue = event.target.value;
 
     // Only allow numeric characters
     if (/^\d*$/.test(newValue)) {
@@ -72,32 +91,41 @@ export function NumberInput({
   };
 
   const sizeClasses = {
-    sm: 'w-10 h-10 text-2xl',
-    md: 'w-12 h-12 sm:w-14 sm:h-14 text-3xl sm:text-4xl',
-    lg: 'w-16 h-16 sm:w-20 sm:h-20 text-4xl sm:text-5xl',
+    sm: 'w-14 h-14 text-3xl sm:w-16 sm:h-16 sm:text-[2.5rem]',
+    md: 'w-16 h-16 text-[2.75rem] sm:w-20 sm:h-20 sm:text-[3.25rem]',
+    lg: 'w-20 h-20 text-[3.25rem] sm:w-24 sm:h-24 sm:text-[3.75rem]',
   };
 
-  return (
-    <Input
-      type="text"
-      inputMode="numeric"
-      pattern="[0-9]*"
-      value={localValue}
-      onChange={handleChange}
-      autoFocus={autoFocus}
-      disabled={disabled}
-      placeholder={placeholder}
-      data-testid={testId}
-      className={cn(
-        "text-center font-mono font-bold border-2 rounded-md transition-all text-slate-800",
-        sizeClasses[size],
-        isCorrect && "border-emerald-500 bg-emerald-100 text-emerald-600",
-        isError && "border-rose-500 bg-rose-100 text-rose-600",
-        !isCorrect && !isError && "border-sky-400 focus:border-sky-500 focus:ring-2 focus:ring-sky-200",
-        shake && "error-shake",
-        bounce && "success-bounce",
-        disabled && "opacity-50 cursor-not-allowed"
-      )}
-    />
-  );
-}
+  const feedbackClasses =
+    feedbackState === "correct"
+      ? "!border-emerald-500 focus-visible:!border-emerald-500 focus-visible:!ring-emerald-200 ring-2 ring-emerald-200 bg-emerald-50 text-emerald-700"
+      : feedbackState === "error"
+      ? "!border-rose-500 focus-visible:!border-rose-500 focus-visible:!ring-rose-200 ring-2 ring-rose-200 bg-rose-50 text-rose-700"
+      : "!border-sky-400 focus-visible:!border-sky-500 focus-visible:!ring-sky-200";
+
+    return (
+      <Input
+        ref={ref}
+        type="text"
+        inputMode="numeric"
+        pattern="[0-9]*"
+        value={localValue}
+        onChange={handleChange}
+        autoFocus={autoFocus}
+        disabled={disabled}
+        placeholder={placeholder}
+        data-testid={testId}
+        className={cn(
+          "text-center font-mono font-bold border-2 rounded-md transition-[colors,transform,shadow] text-slate-800 leading-none tracking-tight px-0",
+          sizeClasses[size],
+          feedbackClasses,
+          shake && "error-shake",
+          bounce && "success-bounce",
+          disabled && "opacity-50 cursor-not-allowed"
+        )}
+      />
+    );
+  },
+);
+
+NumberInput.displayName = "NumberInput";
