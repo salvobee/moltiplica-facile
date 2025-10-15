@@ -1,7 +1,5 @@
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { getGuestStats } from "@/lib/storage";
-import { getUserStats, saveExercise } from "@/lib/firestore";
 import { Trophy, Calculator, Star, TrendingUp } from "lucide-react";
 import type { User as FirebaseUser } from "firebase/auth";
 import type { UserStats } from "@shared/schema";
@@ -10,27 +8,72 @@ interface StatsPageProps {
   user: FirebaseUser | null;
 }
 
+function createEmptyStats(): UserStats {
+  return {
+    totalExercises: 0,
+    totalScore: 0,
+    exercisesByDifficulty: { 1: 0, 2: 0, 3: 0, 4: 0 },
+    lastUpdated: Date.now(),
+  };
+}
+
 export default function StatsPage({ user }: StatsPageProps) {
-  const [stats, setStats] = useState<UserStats>(getGuestStats());
+  const [stats, setStats] = useState<UserStats>(() => createEmptyStats());
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    if (user) {
-      setLoading(true);
-      getUserStats(user.uid).then((cloudStats) => {
-        if (cloudStats) {
-          setStats(cloudStats);
+    let isMounted = true;
+
+    const loadStats = async () => {
+      if (user) {
+        setLoading(true);
+        try {
+          const { getUserStats } = await import("@/lib/firestore");
+          const cloudStats = await getUserStats(user.uid);
+          if (isMounted) {
+            setStats(cloudStats ?? createEmptyStats());
+          }
+        } catch (error) {
+          console.error("Impossibile caricare le statistiche dell'utente", error);
+        } finally {
+          if (isMounted) {
+            setLoading(false);
+          }
         }
-        setLoading(false);
-      });
-    } else {
-      setStats(getGuestStats());
-    }
+      } else {
+        try {
+          const { getGuestStats } = await import("@/lib/storage");
+          if (isMounted) {
+            setStats(getGuestStats());
+          }
+        } catch (error) {
+          console.error("Impossibile caricare le statistiche locali", error);
+          if (isMounted) {
+            setStats(createEmptyStats());
+          }
+        }
+      }
+    };
+
+    loadStats();
+
+    return () => {
+      isMounted = false;
+    };
   }, [user]);
 
-  const averageScore = stats.totalExercises > 0 
-    ? Math.round(stats.totalScore / stats.totalExercises) 
+  const averageScore = stats.totalExercises > 0
+    ? Math.round(stats.totalScore / stats.totalExercises)
     : 0;
+
+  if (loading) {
+    return (
+      <div className="flex flex-col items-center justify-center gap-4 py-24">
+        <div className="h-12 w-12 rounded-full border-4 border-sky-200 border-t-sky-600 animate-spin" />
+        <p className="text-slate-600">Caricamento statistiche...</p>
+      </div>
+    );
+  }
 
   return (
     <div className="flex flex-col gap-6 p-6 max-w-4xl mx-auto">

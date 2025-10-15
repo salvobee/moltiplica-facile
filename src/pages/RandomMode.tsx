@@ -3,8 +3,6 @@ import { DifficultySelector } from "@/components/DifficultySelector";
 import { GuidedExercise } from "@/components/GuidedExercise";
 import { CompletionCelebration } from "@/components/CompletionCelebration";
 import { generateRandomExercise } from "@/lib/multiplicationLogic";
-import { getGuestStats, updateGuestStats, addGuestExercise } from "@/lib/storage";
-import { saveExercise } from "@/lib/firestore";
 import type { DifficultyLevel, Exercise } from "@shared/schema";
 import type { User as FirebaseUser } from "firebase/auth";
 
@@ -50,10 +48,10 @@ export default function RandomMode({ user }: RandomModeProps) {
     };
 
     if (user) {
-      // Save to Firestore for authenticated users
+      const { saveExercise } = await import("@/lib/firestore");
       await saveExercise(user.uid, exercise);
     } else {
-      // Save locally for guest users
+      const { getGuestStats, updateGuestStats, addGuestExercise } = await import("@/lib/storage");
       const stats = getGuestStats();
       stats.totalExercises++;
       stats.totalScore += score;

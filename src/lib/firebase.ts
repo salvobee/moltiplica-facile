@@ -1,6 +1,6 @@
-import { initializeApp } from "firebase/app";
-import { getAuth, GoogleAuthProvider, OAuthProvider } from "firebase/auth";
-import { getFirestore } from "firebase/firestore";
+import type { FirebaseApp } from "firebase/app";
+import type { Auth, GoogleAuthProvider, OAuthProvider } from "firebase/auth";
+import type { Firestore } from "firebase/firestore";
 
 type FirebaseRuntimeConfig = {
   apiKey: string;
@@ -45,12 +45,59 @@ function resolveFirebaseConfig(): FirebaseRuntimeConfig {
   };
 }
 
-const firebaseConfig = resolveFirebaseConfig();
+let firebaseAppPromise: Promise<FirebaseApp> | null = null;
 
-const app = initializeApp(firebaseConfig);
+async function getFirebaseApp(): Promise<FirebaseApp> {
+  if (!firebaseAppPromise) {
+    firebaseAppPromise = import("firebase/app").then(async ({ initializeApp, getApps }) => {
+      const existing = getApps();
+      if (existing.length > 0) {
+        return existing[0]!;
+      }
+      const config = resolveFirebaseConfig();
+      return initializeApp(config);
+    });
+  }
+  return firebaseAppPromise;
+}
 
-export const auth = getAuth(app);
-export const db = getFirestore(app);
+let authPromise: Promise<Auth> | null = null;
+let googleProviderInstance: GoogleAuthProvider | null = null;
+let appleProviderInstance: OAuthProvider | null = null;
+let firestorePromise: Promise<Firestore> | null = null;
 
-export const googleProvider = new GoogleAuthProvider();
-export const appleProvider = new OAuthProvider('apple.com');
+export async function getAuthClient(): Promise<Auth> {
+  if (!authPromise) {
+    authPromise = getFirebaseApp().then(async (app) => {
+      const { getAuth } = await import("firebase/auth");
+      return getAuth(app);
+    });
+  }
+  return authPromise;
+}
+
+export async function getGoogleProvider(): Promise<GoogleAuthProvider> {
+  if (!googleProviderInstance) {
+    const { GoogleAuthProvider } = await import("firebase/auth");
+    googleProviderInstance = new GoogleAuthProvider();
+  }
+  return googleProviderInstance;
+}
+
+export async function getAppleProvider(): Promise<OAuthProvider> {
+  if (!appleProviderInstance) {
+    const { OAuthProvider } = await import("firebase/auth");
+    appleProviderInstance = new OAuthProvider("apple.com");
+  }
+  return appleProviderInstance;
+}
+
+export async function getFirestoreClient(): Promise<Firestore> {
+  if (!firestorePromise) {
+    firestorePromise = getFirebaseApp().then(async (app) => {
+      const { getFirestore } = await import("firebase/firestore");
+      return getFirestore(app);
+    });
+  }
+  return firestorePromise;
+}

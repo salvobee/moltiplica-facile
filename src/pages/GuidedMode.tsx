@@ -5,8 +5,6 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { GuidedExercise } from "@/components/GuidedExercise";
 import { CompletionCelebration } from "@/components/CompletionCelebration";
-import { getGuestStats, updateGuestStats, addGuestExercise } from "@/lib/storage";
-import { saveExercise } from "@/lib/firestore";
 import type { DifficultyLevel, Exercise } from "@shared/schema";
 import { Calculator } from "lucide-react";
 import type { User as FirebaseUser } from "firebase/auth";
@@ -65,10 +63,10 @@ export default function GuidedMode({ user }: GuidedModeProps) {
     };
 
     if (user) {
-      // Save to Firestore for authenticated users
+      const { saveExercise } = await import("@/lib/firestore");
       await saveExercise(user.uid, exercise);
     } else {
-      // Save locally for guest users
+      const { getGuestStats, updateGuestStats, addGuestExercise } = await import("@/lib/storage");
       const stats = getGuestStats();
       stats.totalExercises++;
       stats.totalScore += score;
