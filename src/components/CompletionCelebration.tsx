@@ -33,6 +33,7 @@ export function CompletionCelebration({ score, difficulty, errors, hints, onNewE
   }, []);
 
   const getMessage = () => {
+    if (score >= 350) return "Incredibile! Sei un maestro delle moltiplicazioni!";
     if (score >= 250) return "Fantastico! Sei un campione!";
     if (score >= 150) return "Ottimo lavoro! Continua così!";
     return "Ben fatto! Continua a esercitarti!";

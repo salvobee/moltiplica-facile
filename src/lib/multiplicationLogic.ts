@@ -1,4 +1,4 @@
-import type { MultiplicationState, StepValidation, StepType } from "@shared/schema";
+import type { DifficultyLevel, MultiplicationState, StepValidation, StepType } from "@shared/schema";
 
 export function initializeMultiplication(num1: number, num2: number): MultiplicationState {
   const num1Digits = String(num1).split('').map(Number).reverse();
@@ -279,7 +279,7 @@ export function calculateFinalResult(partialProducts: number[][]): number {
   return result;
 }
 
-export function generateRandomExercise(difficulty: 1 | 2 | 3): { num1: number; num2: number } {
+export function generateRandomExercise(difficulty: DifficultyLevel): { num1: number; num2: number } {
   let num1: number;
   let num2: number;
 
@@ -291,17 +291,21 @@ export function generateRandomExercise(difficulty: 1 | 2 | 3): { num1: number; n
     // 2 digits × 2 digits
     num1 = Math.floor(Math.random() * 90) + 10; // 10-99
     num2 = Math.floor(Math.random() * 90) + 10; // 10-99
-  } else {
+  } else if (difficulty === 3) {
     // 3 digits × 2 digits
     num1 = Math.floor(Math.random() * 900) + 100; // 100-999
     num2 = Math.floor(Math.random() * 90) + 10; // 10-99
+  } else {
+    // 3 digits × 3 digits
+    num1 = Math.floor(Math.random() * 900) + 100; // 100-999
+    num2 = Math.floor(Math.random() * 900) + 100; // 100-999
   }
 
   return { num1, num2 };
 }
 
-export function calculateScore(difficulty: 1 | 2 | 3, errors: number, hints: number): number {
-  const baseScore = difficulty * 100; // 100, 200, or 300
+export function calculateScore(difficulty: DifficultyLevel, errors: number, hints: number): number {
+  const baseScore = difficulty * 100; // 100, 200, 300 o 400
   const errorPenalty = errors * 10;
   const hintPenalty = hints * 5;
   return Math.max(10, baseScore - errorPenalty - hintPenalty);
