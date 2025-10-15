@@ -55,6 +55,7 @@ export default function GuidedMode({ user }: GuidedModeProps) {
       num1: n1,
       num2: n2,
       difficulty,
+      operation: 'multiplication',
       mode: 'guided',
       startedAt: Date.now() - 60000,
       completedAt: Date.now(),
@@ -70,7 +71,10 @@ export default function GuidedMode({ user }: GuidedModeProps) {
       const stats = getGuestStats();
       stats.totalExercises++;
       stats.totalScore += score;
-      stats.exercisesByDifficulty[difficulty]++;
+      stats.exercisesByOperation.multiplication =
+        (stats.exercisesByOperation.multiplication ?? 0) + 1;
+      stats.exercisesByDifficulty.multiplication[difficulty] =
+        (stats.exercisesByDifficulty.multiplication[difficulty] ?? 0) + 1;
       updateGuestStats(stats);
       addGuestExercise(exercise);
     }
@@ -94,12 +98,13 @@ export default function GuidedMode({ user }: GuidedModeProps) {
     const difficulty = determineDifficulty(n1, n2);
 
     return (
-      <CompletionCelebration
-        score={lastScore}
-        difficulty={difficulty}
-        errors={lastErrors}
-        hints={lastHints}
-        onNewExercise={handleNewExercise}
+        <CompletionCelebration
+          score={lastScore}
+          difficulty={difficulty}
+          operation="multiplication"
+          errors={lastErrors}
+          hints={lastHints}
+          onNewExercise={handleNewExercise}
       />
     );
   }
@@ -110,13 +115,13 @@ export default function GuidedMode({ user }: GuidedModeProps) {
     const difficulty = determineDifficulty(n1, n2);
 
     return (
-      <GuidedExercise
-        num1={n1}
-        num2={n2}
-        difficulty={difficulty}
-        onComplete={handleComplete}
-        onReset={handleReset}
-      />
+        <GuidedExercise
+          num1={n1}
+          num2={n2}
+          difficulty={difficulty}
+          onComplete={handleComplete}
+          onReset={handleReset}
+        />
     );
   }
 

@@ -1,8 +1,10 @@
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Trophy, Calculator, Star, TrendingUp } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import type { User as FirebaseUser } from "firebase/auth";
-import type { UserStats } from "@shared/schema";
+import type { OperationType, UserStats } from "@shared/schema";
+import { DIFFICULTY_CONFIG } from "@/components/DifficultySelector";
 
 interface StatsPageProps {
   user: FirebaseUser | null;
@@ -12,7 +14,11 @@ function createEmptyStats(): UserStats {
   return {
     totalExercises: 0,
     totalScore: 0,
-    exercisesByDifficulty: { 1: 0, 2: 0, 3: 0, 4: 0 },
+    exercisesByOperation: { multiplication: 0, division: 0 },
+    exercisesByDifficulty: {
+      multiplication: { 1: 0, 2: 0, 3: 0, 4: 0 },
+      division: { 1: 0, 2: 0, 3: 0, 4: 0 },
+    },
     lastUpdated: Date.now(),
   };
 }
@@ -20,6 +26,7 @@ function createEmptyStats(): UserStats {
 export default function StatsPage({ user }: StatsPageProps) {
   const [stats, setStats] = useState<UserStats>(() => createEmptyStats());
   const [loading, setLoading] = useState(false);
+  const [selectedOperation, setSelectedOperation] = useState<OperationType>('multiplication');
 
   useEffect(() => {
     let isMounted = true;
@@ -65,6 +72,10 @@ export default function StatsPage({ user }: StatsPageProps) {
   const averageScore = stats.totalExercises > 0
     ? Math.round(stats.totalScore / stats.totalExercises)
     : 0;
+
+  const difficultyStats = stats.exercisesByDifficulty[selectedOperation];
+  const difficultyConfig = DIFFICULTY_CONFIG[selectedOperation];
+  const totalForSelectedOperation = stats.exercisesByOperation[selectedOperation] ?? 0;
 
   if (loading) {
     return (
@@ -145,44 +156,72 @@ export default function StatsPage({ user }: StatsPageProps) {
         </Card>
       </div>
 
-      {/* Difficulty Breakdown */}
+      {/* Operation Breakdown */}
       <Card className="border-2 border-slate-300">
         <CardHeader>
+          <CardTitle className="text-xl">Operazioni completate</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="flex flex-col items-center p-4 bg-slate-100 rounded-lg">
+              <div className="text-2xl font-bold text-slate-800 mb-1">
+                {stats.exercisesByOperation.multiplication ?? 0}
+              </div>
+              <div className="text-sm text-slate-600">Moltiplicazioni</div>
+              <div className="text-xs text-slate-500 mt-1">Prodotti in colonna</div>
+            </div>
+            <div className="flex flex-col items-center p-4 bg-slate-100 rounded-lg">
+              <div className="text-2xl font-bold text-slate-800 mb-1">
+                {stats.exercisesByOperation.division ?? 0}
+              </div>
+              <div className="text-sm text-slate-600">Divisioni</div>
+              <div className="text-xs text-slate-500 mt-1">Quozienti con resto</div>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Difficulty Breakdown */}
+      <Card className="border-2 border-slate-300">
+        <CardHeader className="flex flex-col gap-3">
           <CardTitle className="text-xl">Esercizi per Difficoltà</CardTitle>
+          <div className="flex flex-wrap gap-2">
+            {([
+              { value: 'multiplication' as OperationType, label: 'Moltiplicazioni', symbol: '×' },
+              { value: 'division' as OperationType, label: 'Divisioni', symbol: '÷' },
+            ] satisfies { value: OperationType; label: string; symbol: string }[]).map((option) => (
+              <Button
+                key={option.value}
+                size="sm"
+                variant={selectedOperation === option.value ? 'default' : 'outline'}
+                onClick={() => setSelectedOperation(option.value)}
+              >
+                <span className="font-semibold mr-2">{option.symbol}</span>
+                {option.label}
+              </Button>
+            ))}
+          </div>
+          <p className="text-sm text-slate-500">
+            {totalForSelectedOperation} esercizi di {selectedOperation === 'division' ? 'divisione' : 'moltiplicazione'} completati.
+          </p>
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-            <div className="flex flex-col items-center p-4 bg-slate-100 rounded-lg">
-              <div className="text-2xl font-bold text-slate-800 mb-1" data-testid="text-difficulty-1">
-                {stats.exercisesByDifficulty[1]}
+            {difficultyConfig.map((config) => (
+              <div
+                key={`${selectedOperation}-${config.level}`}
+                className="flex flex-col items-center p-4 bg-slate-100 rounded-lg"
+              >
+                <div
+                  className="text-2xl font-bold text-slate-800 mb-1"
+                  data-testid={`text-difficulty-${config.level}`}
+                >
+                  {difficultyStats[config.level] ?? 0}
+                </div>
+                <div className="text-sm text-slate-600">{config.label}</div>
+                <div className="text-xs text-slate-500 mt-1">{config.description}</div>
               </div>
-              <div className="text-sm text-slate-600">Facile</div>
-              <div className="text-xs text-slate-500 mt-1">2 cifre × 1 cifra</div>
-            </div>
-
-            <div className="flex flex-col items-center p-4 bg-slate-100 rounded-lg">
-              <div className="text-2xl font-bold text-slate-800 mb-1" data-testid="text-difficulty-2">
-                {stats.exercisesByDifficulty[2]}
-              </div>
-              <div className="text-sm text-slate-600">Medio</div>
-              <div className="text-xs text-slate-500 mt-1">2 cifre × 2 cifre</div>
-            </div>
-
-            <div className="flex flex-col items-center p-4 bg-slate-100 rounded-lg">
-              <div className="text-2xl font-bold text-slate-800 mb-1" data-testid="text-difficulty-3">
-                {stats.exercisesByDifficulty[3]}
-              </div>
-              <div className="text-sm text-slate-600">Difficile</div>
-              <div className="text-xs text-slate-500 mt-1">3 cifre × 2 cifre</div>
-            </div>
-
-            <div className="flex flex-col items-center p-4 bg-slate-100 rounded-lg">
-              <div className="text-2xl font-bold text-slate-800 mb-1" data-testid="text-difficulty-4">
-                {stats.exercisesByDifficulty[4] ?? 0}
-              </div>
-              <div className="text-sm text-slate-600">Difficilissimo</div>
-              <div className="text-xs text-slate-500 mt-1">3 cifre × 3 cifre</div>
-            </div>
+            ))}
           </div>
         </CardContent>
       </Card>

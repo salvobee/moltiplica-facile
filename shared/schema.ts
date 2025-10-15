@@ -1,5 +1,8 @@
 import { z } from "zod";
 
+// Supported operations
+export type OperationType = 'multiplication' | 'division';
+
 // Difficulty levels for exercises
 export type DifficultyLevel = 1 | 2 | 3 | 4;
 
@@ -16,6 +19,7 @@ export const exerciseSchema = z.object({
   num1: z.number().int().positive(),
   num2: z.number().int().positive(),
   difficulty: z.union([z.literal(1), z.literal(2), z.literal(3), z.literal(4)]),
+  operation: z.enum(['multiplication', 'division']).default('multiplication'),
   mode: z.enum(['guided', 'random']),
   startedAt: z.number(), // timestamp
   completedAt: z.number().optional(),
@@ -30,14 +34,31 @@ export const userStatsSchema = z.object({
   userId: z.string().optional(), // undefined for guest mode
   totalExercises: z.number().int().min(0).default(0),
   totalScore: z.number().int().min(0).default(0),
+  exercisesByOperation: z
+    .object({
+      multiplication: z.number().int().min(0).default(0),
+      division: z.number().int().min(0).default(0),
+    })
+    .default({ multiplication: 0, division: 0 }),
   exercisesByDifficulty: z
     .object({
-      1: z.number().int().min(0).default(0),
-      2: z.number().int().min(0).default(0),
-      3: z.number().int().min(0).default(0),
-      4: z.number().int().min(0).default(0),
+      multiplication: z.object({
+        1: z.number().int().min(0).default(0),
+        2: z.number().int().min(0).default(0),
+        3: z.number().int().min(0).default(0),
+        4: z.number().int().min(0).default(0),
+      }),
+      division: z.object({
+        1: z.number().int().min(0).default(0),
+        2: z.number().int().min(0).default(0),
+        3: z.number().int().min(0).default(0),
+        4: z.number().int().min(0).default(0),
+      }),
     })
-    .default({ 1: 0, 2: 0, 3: 0, 4: 0 }),
+    .default({
+      multiplication: { 1: 0, 2: 0, 3: 0, 4: 0 },
+      division: { 1: 0, 2: 0, 3: 0, 4: 0 },
+    }),
   lastUpdated: z.number(), // timestamp
 });
 

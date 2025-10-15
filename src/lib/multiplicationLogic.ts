@@ -1,4 +1,10 @@
-import type { DifficultyLevel, MultiplicationState, StepValidation, StepType } from "@shared/schema";
+import type {
+  DifficultyLevel,
+  MultiplicationState,
+  OperationType,
+  StepValidation,
+  StepType,
+} from "@shared/schema";
 
 export function initializeMultiplication(num1: number, num2: number): MultiplicationState {
   const num1Digits = String(num1).split('').map(Number).reverse();
@@ -279,7 +285,9 @@ export function calculateFinalResult(partialProducts: number[][]): number {
   return result;
 }
 
-export function generateRandomExercise(difficulty: DifficultyLevel): { num1: number; num2: number } {
+export function generateRandomMultiplication(
+  difficulty: DifficultyLevel
+): { num1: number; num2: number } {
   let num1: number;
   let num2: number;
 
@@ -304,9 +312,70 @@ export function generateRandomExercise(difficulty: DifficultyLevel): { num1: num
   return { num1, num2 };
 }
 
-export function calculateScore(difficulty: DifficultyLevel, errors: number, hints: number): number {
+function randomInt(min: number, max: number): number {
+  return Math.floor(Math.random() * (max - min + 1)) + min;
+}
+
+export function generateRandomDivision(
+  difficulty: DifficultyLevel
+): { num1: number; num2: number } {
+  const configs: Record<DifficultyLevel, { divisor: [number, number]; quotient: [number, number] }> = {
+    1: { divisor: [2, 9], quotient: [2, 9] },
+    2: { divisor: [2, 9], quotient: [10, 99] },
+    3: { divisor: [10, 25], quotient: [10, 99] },
+    4: { divisor: [10, 50], quotient: [100, 999] },
+  };
+
+  const config = configs[difficulty];
+  const [divisorMin, divisorMax] = config.divisor;
+  const [quotientMin, quotientMax] = config.quotient;
+  const divisor = randomInt(divisorMin, divisorMax);
+  const quotient = randomInt(quotientMin, quotientMax);
+  const dividend = divisor * quotient;
+
+  return { num1: dividend, num2: divisor };
+}
+
+export function generateRandomExercise(
+  operation: OperationType,
+  difficulty: DifficultyLevel
+): { num1: number; num2: number } {
+  if (operation === 'division') {
+    return generateRandomDivision(difficulty);
+  }
+  return generateRandomMultiplication(difficulty);
+}
+
+export function calculateMultiplicationScore(
+  difficulty: DifficultyLevel,
+  errors: number,
+  hints: number
+): number {
   const baseScore = difficulty * 100; // 100, 200, 300 o 400
   const errorPenalty = errors * 10;
   const hintPenalty = hints * 5;
   return Math.max(10, baseScore - errorPenalty - hintPenalty);
+}
+
+export function calculateDivisionScore(
+  difficulty: DifficultyLevel,
+  errors: number,
+  hints: number
+): number {
+  const baseScore = 80 + difficulty * 60; // valori più bassi per divisione ma sempre gratificanti
+  const errorPenalty = errors * 15;
+  const hintPenalty = hints * 10;
+  return Math.max(10, baseScore - errorPenalty - hintPenalty);
+}
+
+export function calculateScore(
+  operation: OperationType,
+  difficulty: DifficultyLevel,
+  errors: number,
+  hints: number
+): number {
+  if (operation === 'division') {
+    return calculateDivisionScore(difficulty, errors, hints);
+  }
+  return calculateMultiplicationScore(difficulty, errors, hints);
 }
