@@ -1,4 +1,4 @@
-import { useState, type ReactNode } from "react";
+import { useEffect, useRef, useState, type FormEvent, type ReactNode } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { MultiplicationDisplay } from "./MultiplicationDisplay";
@@ -31,6 +31,7 @@ export function GuidedExercise({ num1, num2, difficulty, onComplete, onReset }: 
   const [hintLevel, setHintLevel] = useState<1 | 2 | 3 | null>(null);
   const [hintMessage, setHintMessage] = useState<string>("");
   const [showFinal, setShowFinal] = useState(false);
+  const inputRef = useRef<HTMLInputElement>(null);
 
   // Determine current step type
   const getCurrentStepType = (): StepType => {
@@ -42,8 +43,17 @@ export function GuidedExercise({ num1, num2, difficulty, onComplete, onReset }: 
 
   const currentStepType = getCurrentStepType();
 
-  const handleSubmit = () => {
-    if (currentInput === null) return;
+  useEffect(() => {
+    inputRef.current?.focus();
+  }, []);
+
+  const handleSubmit = (event?: FormEvent<HTMLFormElement>) => {
+    event?.preventDefault();
+
+    if (currentInput === null) {
+      inputRef.current?.focus();
+      return;
+    }
 
     const validation = validateStep(state, currentInput, currentStepType);
 
@@ -59,6 +69,7 @@ export function GuidedExercise({ num1, num2, difficulty, onComplete, onReset }: 
         setState(newState);
         setCurrentInput(null);
         setIsCorrect(false);
+        inputRef.current?.focus();
 
         // Check if exercise is complete
         if (newState.isComplete) {
@@ -73,12 +84,15 @@ export function GuidedExercise({ num1, num2, difficulty, onComplete, onReset }: 
       setIsError(true);
       const newState = { ...state, errors: state.errors + 1 };
       setState(newState);
-      
+
       setTimeout(() => {
         setIsError(false);
         setCurrentInput(null);
+        inputRef.current?.focus();
       }, 400);
     }
+
+    inputRef.current?.focus();
   };
 
   const handleHint = () => {
@@ -178,41 +192,44 @@ export function GuidedExercise({ num1, num2, difficulty, onComplete, onReset }: 
             {instructionText}
           </CardTitle>
         </CardHeader>
-        <CardContent className="flex flex-col items-center gap-4">
-          <div className="flex items-center gap-4">
-            <NumberInput
-              value={currentInput}
-              onChange={setCurrentInput}
-              isCorrect={isCorrect}
-              isError={isError}
-              size="lg"
-              autoFocus
-              data-testid="input-current-step"
-            />
-          </div>
+        <CardContent>
+          <form onSubmit={handleSubmit} className="flex flex-col items-center gap-4">
+            <div className="flex items-center gap-4">
+              <NumberInput
+                ref={inputRef}
+                value={currentInput}
+                onChange={setCurrentInput}
+                isCorrect={isCorrect}
+                isError={isError}
+                size="lg"
+                autoFocus
+                data-testid="input-current-step"
+              />
+            </div>
 
-          <div className="flex gap-3 flex-wrap justify-center">
-            <Button 
-              onClick={handleSubmit} 
-              disabled={currentInput === null}
-              size="lg"
-              className="min-w-32"
-              data-testid="button-submit"
-            >
-              Conferma
-              <ArrowRight className="w-5 h-5 ml-2" />
-            </Button>
-            <Button 
-              onClick={handleHint}
-              variant="outline"
-              size="lg"
-              disabled={hintLevel === 3}
-              data-testid="button-hint"
-            >
-              <HelpCircle className="w-5 h-5 mr-2" />
-              Suggerimento
-            </Button>
-          </div>
+            <div className="flex gap-3 flex-wrap justify-center">
+              <Button
+                type="submit"
+                disabled={currentInput === null}
+                size="lg"
+                className="min-w-32"
+                data-testid="button-submit"
+              >
+                Conferma
+                <ArrowRight className="w-5 h-5 ml-2" />
+              </Button>
+              <Button
+                onClick={handleHint}
+                variant="outline"
+                size="lg"
+                disabled={hintLevel === 3}
+                data-testid="button-hint"
+              >
+                <HelpCircle className="w-5 h-5 mr-2" />
+                Suggerimento
+              </Button>
+            </div>
+          </form>
         </CardContent>
       </Card>
 

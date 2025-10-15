@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { forwardRef, useState, useEffect } from "react";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 
@@ -14,17 +14,21 @@ interface NumberInputProps {
   "data-testid"?: string;
 }
 
-export function NumberInput({ 
-  value, 
-  onChange, 
-  isCorrect, 
-  isError, 
-  size = 'md',
-  autoFocus,
-  placeholder = "",
-  disabled = false,
-  "data-testid": testId
-}: NumberInputProps) {
+export const NumberInput = forwardRef<HTMLInputElement, NumberInputProps>(
+  (
+    {
+      value,
+      onChange,
+      isCorrect,
+      isError,
+      size = 'md',
+      autoFocus,
+      placeholder = "",
+      disabled = false,
+      "data-testid": testId,
+    }: NumberInputProps,
+    ref,
+  ) => {
   const [localValue, setLocalValue] = useState(value?.toString() || '');
   const [shake, setShake] = useState(false);
   const [bounce, setBounce] = useState(false);
@@ -99,25 +103,29 @@ export function NumberInput({
       ? "border-rose-500 focus-visible:border-rose-500 focus-visible:ring-rose-200 ring-2 ring-rose-200 bg-rose-50 text-rose-700"
       : "border-sky-400 focus-visible:border-sky-500 focus-visible:ring-sky-200";
 
-  return (
-    <Input
-      type="text"
-      inputMode="numeric"
-      pattern="[0-9]*"
-      value={localValue}
-      onChange={handleChange}
-      autoFocus={autoFocus}
-      disabled={disabled}
-      placeholder={placeholder}
-      data-testid={testId}
-      className={cn(
-        "text-center font-mono font-bold border-2 rounded-md transition-[colors,transform,shadow] text-slate-800 leading-none tracking-tight px-0",
-        sizeClasses[size],
-        feedbackClasses,
-        shake && "error-shake",
-        bounce && "success-bounce",
-        disabled && "opacity-50 cursor-not-allowed"
-      )}
-    />
-  );
-}
+    return (
+      <Input
+        ref={ref}
+        type="text"
+        inputMode="numeric"
+        pattern="[0-9]*"
+        value={localValue}
+        onChange={handleChange}
+        autoFocus={autoFocus}
+        disabled={disabled}
+        placeholder={placeholder}
+        data-testid={testId}
+        className={cn(
+          "text-center font-mono font-bold border-2 rounded-md transition-[colors,transform,shadow] text-slate-800 leading-none tracking-tight px-0",
+          sizeClasses[size],
+          feedbackClasses,
+          shake && "error-shake",
+          bounce && "success-bounce",
+          disabled && "opacity-50 cursor-not-allowed"
+        )}
+      />
+    );
+  },
+);
+
+NumberInput.displayName = "NumberInput";
