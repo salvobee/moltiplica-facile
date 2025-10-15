@@ -144,7 +144,7 @@ export function MultiplicationDisplay({ state, showPartialProducts = true }: Mul
           className = activeClassName;
         }
       } else if (withinShift) {
-        content = <span className="text-muted-foreground/50">0</span>;
+        content = <span className="text-slate-500/50">0</span>;
       }
 
       return (
@@ -163,11 +163,11 @@ export function MultiplicationDisplay({ state, showPartialProducts = true }: Mul
   };
 
   return (
-    <div className="flex flex-col items-center gap-2 p-6 bg-card border-2 border-card-border rounded-lg">
+    <div className="flex flex-col items-center gap-2 p-6 bg-white border-2 border-slate-300 rounded-lg">
       <table className="w-full table-fixed">
         <tbody>
           {showCarryRow && (
-            <tr className="text-lg sm:text-xl md:text-2xl text-primary font-semibold">
+            <tr className="text-lg sm:text-xl md:text-2xl text-sky-600 font-semibold">
               {createDigitCells(carryIndicators, {
                 placeholder: <span className="opacity-0">0</span>,
               })}
@@ -175,38 +175,38 @@ export function MultiplicationDisplay({ state, showPartialProducts = true }: Mul
             </tr>
           )}
 
-          <tr className="text-4xl sm:text-5xl md:text-6xl font-bold text-foreground">
+          <tr className="text-4xl sm:text-5xl md:text-6xl font-bold text-slate-800">
             {createDigitCells(num1Display, {
               getContent: (digit) => digit,
               getTestId: (idx) => `num1-digit-${idx}`,
               activeIndex: activeMultiplicandDisplayIndex,
               activeClassName:
-                "bg-primary/15 text-primary rounded-lg border border-primary/60 shadow-sm font-extrabold",
+                "bg-sky-100 text-sky-700 rounded-lg border border-sky-400 shadow-sm font-extrabold",
               placeholder: <span />,
             })}
             <td className="w-9 sm:w-11 md:w-12" />
           </tr>
 
-          <tr className="text-4xl sm:text-5xl md:text-6xl font-bold text-foreground">
+          <tr className="text-4xl sm:text-5xl md:text-6xl font-bold text-slate-800">
             {createDigitCells(num2Display, {
               getContent: (digit) => digit,
               getTestId: (idx) => `num2-digit-${idx}`,
               activeIndex: activeMultiplierDisplayIndex,
               activeClassName:
-                "bg-primary/15 text-primary rounded-lg border border-primary/60 shadow-sm font-extrabold",
+                "bg-sky-100 text-sky-700 rounded-lg border border-sky-400 shadow-sm font-extrabold",
               placeholder: <span />,
             })}
-            <td className="w-9 sm:w-11 md:w-12 text-center text-primary align-bottom">×</td>
+            <td className="w-9 sm:w-11 md:w-12 text-center text-sky-600 align-bottom">×</td>
           </tr>
 
           <tr>
             <td colSpan={totalColumns} className="pt-1 pb-2">
-              <div className="w-full border-t-2 border-foreground" />
+              <div className="w-full border-t-2 border-slate-800" />
             </td>
           </tr>
 
           {isAdditionPhase && state.additionCarry > 0 && (
-            <tr className="text-base sm:text-lg md:text-xl text-destructive font-semibold">
+            <tr className="text-base sm:text-lg md:text-xl text-rose-500 font-semibold">
               {Array.from({ length: totalDigitColumns }, (_, colIdx) => {
                 const columnFromRight = totalDigitColumns - 1 - colIdx;
                 const isActiveColumn = columnFromRight === state.additionColumnIndex;
@@ -216,7 +216,7 @@ export function MultiplicationDisplay({ state, showPartialProducts = true }: Mul
                     className="w-9 sm:w-11 md:w-12 h-8 text-center align-top font-mono"
                   >
                     {isActiveColumn ? (
-                      <sup className="text-destructive text-lg sm:text-xl md:text-2xl font-bold">
+                      <sup className="text-rose-500 text-lg sm:text-xl md:text-2xl font-bold">
                         {state.additionCarry}
                       </sup>
                     ) : (
@@ -250,7 +250,7 @@ export function MultiplicationDisplay({ state, showPartialProducts = true }: Mul
                   key={`${row.isPreview ? "preview" : "partial"}-${rowIdx}`}
                   className={cn(
                     "text-3xl sm:text-4xl md:text-5xl font-medium",
-                    row.isPreview ? "text-primary" : "text-muted-foreground"
+                    row.isPreview ? "text-sky-600" : "text-slate-500"
                   )}
                 >
                   {createDigitCells(partialDisplay, {
@@ -264,10 +264,10 @@ export function MultiplicationDisplay({ state, showPartialProducts = true }: Mul
                     activeIndex: additionHighlightIndex ?? undefined,
                     activeClassName:
                       additionHighlightIndex !== null
-                        ? "bg-accent/20 text-foreground rounded-lg border border-accent shadow-sm"
+                        ? "bg-amber-100 text-slate-800 rounded-lg border border-amber-300 shadow-sm"
                         : undefined,
                   })}
-                  <td className="w-9 sm:w-11 md:w-12 text-center text-primary align-bottom font-semibold">
+                  <td className="w-9 sm:w-11 md:w-12 text-center text-sky-600 align-bottom font-semibold">
                     {symbol}
                   </td>
                 </tr>
@@ -277,13 +277,13 @@ export function MultiplicationDisplay({ state, showPartialProducts = true }: Mul
           {showPartialProducts && state.partialProducts.length > 1 && (
             <tr>
               <td colSpan={totalColumns} className="pt-1">
-                <div className="w-full border-t-2 border-foreground" />
+                <div className="w-full border-t-2 border-slate-800" />
               </td>
             </tr>
           )}
 
           {(isAdditionPhase || isCompletePhase || computedFinalDigits.length > 0) && (
-            <tr className="text-4xl sm:text-5xl md:text-6xl font-bold text-foreground">
+            <tr className="text-4xl sm:text-5xl md:text-6xl font-bold text-slate-800">
               {createDigitCells(
                 Array.from({ length: totalDigitColumns }, (_, colIdx) => {
                   const digitIndex = totalDigitColumns - 1 - colIdx;
@@ -298,11 +298,11 @@ export function MultiplicationDisplay({ state, showPartialProducts = true }: Mul
                       : undefined,
                   activeClassName:
                     activeAdditionColumn !== null && activeAdditionColumn < totalDigitColumns
-                      ? "bg-accent/20 text-foreground rounded-lg border border-accent shadow-sm"
+                      ? "bg-amber-100 text-slate-800 rounded-lg border border-amber-300 shadow-sm"
                       : undefined,
                 }
               )}
-              <td className="w-9 sm:w-11 md:w-12 text-center text-primary align-bottom font-semibold">=</td>
+              <td className="w-9 sm:w-11 md:w-12 text-center text-sky-600 align-bottom font-semibold">=</td>
             </tr>
           )}
         </tbody>

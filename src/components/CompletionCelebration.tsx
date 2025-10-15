@@ -40,36 +40,36 @@ export function CompletionCelebration({ score, difficulty, errors, hints, onNewE
 
   return (
     <div className="flex flex-col items-center gap-6 p-6 max-w-2xl mx-auto">
-      <Card className="w-full border-2 border-success bg-success/5">
+      <Card className="w-full border-2 border-emerald-300 bg-emerald-50">
         <CardContent className="p-8 flex flex-col items-center gap-6">
-          <div className="w-24 h-24 rounded-full bg-success/20 flex items-center justify-center">
-            <Trophy className="w-16 h-16 text-success" />
+          <div className="w-24 h-24 rounded-full bg-emerald-100 flex items-center justify-center">
+            <Trophy className="w-16 h-16 text-emerald-600" />
           </div>
 
-          <h2 className="text-3xl sm:text-4xl font-bold text-center text-success">
+          <h2 className="text-3xl sm:text-4xl font-bold text-center text-emerald-600">
             {getMessage()}
           </h2>
 
           <div className="flex items-center gap-3">
-            <Star className="w-12 h-12 text-accent fill-accent" />
-            <span className="text-5xl sm:text-6xl font-bold text-foreground" data-testid="text-score">
+            <Star className="w-12 h-12 text-amber-400 fill-amber-400" />
+            <span className="text-5xl sm:text-6xl font-bold text-slate-800" data-testid="text-score">
               {score}
             </span>
-            <span className="text-2xl text-muted-foreground">punti</span>
+            <span className="text-2xl text-slate-600">punti</span>
           </div>
 
           <div className="grid grid-cols-3 gap-6 w-full max-w-md mt-4">
             <div className="flex flex-col items-center gap-2">
-              <div className="text-3xl font-bold text-primary">{difficulty}</div>
-              <div className="text-sm text-muted-foreground text-center">Difficoltà</div>
+              <div className="text-3xl font-bold text-sky-600">{difficulty}</div>
+              <div className="text-sm text-slate-600 text-center">Difficoltà</div>
             </div>
             <div className="flex flex-col items-center gap-2">
-              <div className="text-3xl font-bold text-destructive">{errors}</div>
-              <div className="text-sm text-muted-foreground text-center">Errori</div>
+              <div className="text-3xl font-bold text-rose-500">{errors}</div>
+              <div className="text-sm text-slate-600 text-center">Errori</div>
             </div>
             <div className="flex flex-col items-center gap-2">
-              <div className="text-3xl font-bold text-accent">{hints}</div>
-              <div className="text-sm text-muted-foreground text-center">Suggerimenti</div>
+              <div className="text-3xl font-bold text-amber-500">{hints}</div>
+              <div className="text-sm text-slate-600 text-center">Suggerimenti</div>
             </div>
           </div>
 

@@ -49,17 +49,17 @@ function App() {
     <QueryClientProvider client={queryClient}>
       <div className="min-h-screen notebook-grid flex flex-col">
         {/* Header */}
-        <header className="sticky top-0 z-50 bg-card border-b-2 border-card-border shadow-sm">
+        <header className="sticky top-0 z-50 bg-white border-b-2 border-slate-200 shadow-sm">
           <div className="container mx-auto px-4 py-3 flex items-center justify-between gap-4">
             <div className="flex items-center gap-2">
-              <div className="w-10 h-10 rounded-lg bg-primary flex items-center justify-center">
-                <Calculator className="w-6 h-6 text-primary-foreground" />
+              <div className="w-10 h-10 rounded-lg bg-sky-500 flex items-center justify-center">
+                <Calculator className="w-6 h-6 text-white" />
               </div>
               <div className="hidden sm:block">
-                <h1 className="text-lg font-bold text-foreground leading-tight">
+                <h1 className="text-lg font-bold text-slate-800 leading-tight">
                   Moltiplicazioni
                 </h1>
-                <p className="text-xs text-muted-foreground leading-tight">
+                <p className="text-xs text-slate-500 leading-tight">
                   in Colonna
                 </p>
               </div>
@@ -70,7 +70,7 @@ function App() {
         </header>
 
         {/* Navigation Tabs */}
-        <nav className="sticky top-[73px] z-40 bg-card border-b border-card-border">
+        <nav className="sticky top-[73px] z-40 bg-white border-b border-slate-200">
           <div className="container mx-auto px-4">
             <div className="flex gap-1 overflow-x-auto">
               {navItems.map((item) => {
@@ -100,8 +100,8 @@ function App() {
         </main>
 
         {/* Footer */}
-        <footer className="bg-card border-t border-card-border py-4">
-          <div className="container mx-auto px-4 text-center text-sm text-muted-foreground">
+        <footer className="bg-white border-t border-slate-200 py-4">
+          <div className="container mx-auto px-4 text-center text-sm text-slate-500">
             <p>Impara le moltiplicazioni in colonna divertendoti!</p>
           </div>
         </footer>

@@ -89,11 +89,11 @@ export function NumberInput({
       placeholder={placeholder}
       data-testid={testId}
       className={cn(
-        "text-center font-mono font-bold border-2 rounded-md transition-all",
+        "text-center font-mono font-bold border-2 rounded-md transition-all text-slate-800",
         sizeClasses[size],
-        isCorrect && "border-success bg-success/10 text-success",
-        isError && "border-destructive bg-destructive/10",
-        !isCorrect && !isError && "border-primary focus:border-primary focus:ring-primary",
+        isCorrect && "border-emerald-500 bg-emerald-100 text-emerald-600",
+        isError && "border-rose-500 bg-rose-100 text-rose-600",
+        !isCorrect && !isError && "border-sky-400 focus:border-sky-500 focus:ring-2 focus:ring-sky-200",
         shake && "error-shake",
         bounce && "success-bounce",
         disabled && "opacity-50 cursor-not-allowed"

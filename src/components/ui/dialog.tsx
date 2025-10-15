@@ -75,14 +75,14 @@ export function DialogContent({ className, children }: DialogContentProps) {
         role="dialog"
         aria-modal="true"
         className={cn(
-          "relative z-10 w-full max-w-lg rounded-lg border border-border bg-card p-6 shadow-xl",
+          "relative z-10 w-full max-w-lg rounded-lg border border-slate-200 bg-white p-6 shadow-xl",
           className,
         )}
       >
         <button
           type="button"
           aria-label="Chiudi"
-          className="absolute right-4 top-4 rounded-full p-1 text-muted-foreground transition hover:bg-muted/40"
+          className="absolute right-4 top-4 rounded-full p-1 text-slate-500 transition hover:bg-slate-100"
           onClick={() => onOpenChange?.(false)}
         >
           <X className="h-4 w-4" />
@@ -104,5 +104,5 @@ export function DialogTitle({ className, children }: { className?: string; child
 }
 
 export function DialogDescription({ className, children }: { className?: string; children: ReactNode }) {
-  return <p className={cn("text-sm text-muted-foreground", className)}>{children}</p>;
+  return <p className={cn("text-sm text-slate-500", className)}>{children}</p>;
 }

@@ -21,17 +21,17 @@ export function DifficultySelector({ onSelect, disabled }: DifficultySelectorPro
         <Card
           key={diff.level}
           className={cn(
-            "border-2 transition-all cursor-pointer hover-elevate",
-            "hover:border-primary hover:shadow-lg"
+            "border-2 transition-all cursor-pointer",
+            "hover:border-sky-500 hover:shadow-lg hover:-translate-y-0.5"
           )}
         >
           <CardContent className="p-6 flex flex-col items-center gap-3">
-            <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center">
-              <span className="text-2xl font-bold text-primary">{diff.level}</span>
+            <div className="w-12 h-12 rounded-full bg-sky-500/10 flex items-center justify-center">
+              <span className="text-2xl font-bold text-sky-600">{diff.level}</span>
             </div>
-            <h3 className="text-xl font-bold text-foreground">{diff.label}</h3>
-            <p className="text-sm text-muted-foreground text-center">{diff.description}</p>
-            <p className="text-lg font-mono font-semibold text-foreground">{diff.example}</p>
+            <h3 className="text-xl font-bold text-slate-800">{diff.label}</h3>
+            <p className="text-sm text-slate-600 text-center">{diff.description}</p>
+            <p className="text-lg font-mono font-semibold text-slate-800">{diff.example}</p>
             <Button
               onClick={() => onSelect(diff.level)}
               disabled={disabled}
